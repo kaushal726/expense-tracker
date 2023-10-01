@@ -8,11 +8,16 @@ export default (state, action) => {
         ),
       };
     case "CREATE_TRANSACTION":
-      console.log();
       return {
         ...state,
         transactions: [action.payload, ...state.transactions],
       };
+    case "SET_LOCALSTORAGE_VALUE":
+      return {
+        ...state,
+        transactions: [...action.payload],
+      };
+
     default:
       return state;
   }

@@ -9,15 +9,19 @@ import { GlobalProvider } from "./Context/GlobalState";
 
 function App() {
   return (
-    <GlobalProvider>
-      <Header />
-      <div className="container">
-        <Balance />
-        <IncomeExpenses />
-        <TransitionList />
-        <AddTransition />
-      </div>
-    </GlobalProvider>
+    <div className="h-screen overflow-y-auto  fancy-scrollbar scroll-smooth w-full">
+      <GlobalProvider>
+        <div className="flex flex-col w-full items-center justify-center ">
+          <Header />
+          <div className="container md:px-20 flex flex-col w-full items-center justify-center">
+            <Balance />
+            <IncomeExpenses />
+            <TransitionList />
+            <AddTransition />
+          </div>
+        </div>
+      </GlobalProvider>
+    </div>
   );
 }
 

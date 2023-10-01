@@ -1,4 +1,4 @@
-import React, { createContext, useReducer } from "react";
+import React, { createContext, useEffect, useReducer, useRef } from "react";
 import AppReducer from "./AppReducer";
 
 const initialState = {
@@ -9,6 +9,25 @@ export const GlobalContext = createContext(initialState);
 
 export const GlobalProvider = ({ children }) => {
   const [state, dispatch] = useReducer(AppReducer, initialState);
+  const isInitialRender = useRef(true);
+
+  useEffect(() => {
+    const items = JSON.parse(localStorage.getItem("transactions"));
+    if (items) {
+      dispatch({
+        type: "SET_LOCALSTORAGE_VALUE",
+        payload: items,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialRender.current) {
+      localStorage.setItem("transactions", JSON.stringify(state.transactions));
+    } else {
+      isInitialRender.current = false;
+    }
+  }, [state.transactions]);
 
   function deleteTransition(id) {
     dispatch({

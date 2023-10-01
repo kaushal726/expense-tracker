@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css?family=Lato&display=swap');
-
+@import url("https://fonts.googleapis.com/css?family=Lato&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Croissant+One&family=Lora:ital,wght@1,700&family=Young+Serif&display=swap");
 :root {
   --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
 }
@@ -7,21 +7,61 @@
 * {
   box-sizing: border-box;
 }
+.fancy-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
 
+.fancy-scrollbar::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgb(0, 0, 0);
+  border-radius: 16px;
+}
+
+.fancy-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 15px;
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.952);
+}
+
+.balance-background {
+  background: rgb(55, 29, 253);
+  background: -moz-linear-gradient(
+    61deg,
+    rgba(55, 29, 253, 1) 13%,
+    rgba(70, 11, 164, 1) 30%,
+    rgba(0, 0, 0, 1) 68%
+  );
+  background: -webkit-linear-gradient(
+    61deg,
+    rgba(55, 29, 253, 1) 13%,
+    rgba(70, 11, 164, 1) 30%,
+    rgba(0, 0, 0, 1) 68%
+  );
+  background: linear-gradient(
+    61deg,
+    rgba(55, 29, 253, 1) 13%,
+    rgba(70, 11, 164, 1) 30%,
+    rgba(0, 0, 0, 1) 68%
+  );
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#371dfd",endColorstr="#000000",GradientType=1);
+  -webkit-box-shadow: -5px 11px 33px 3px rgba(0, 0, 0, 0.92);
+  box-shadow: -5px 11px 33px 3px rgba(0, 0, 0, 0.92);
+}
 body {
-  background-color: #f7f7f7;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
   margin: 0;
-  font-family: 'Lato', sans-serif;
 }
-
+.head {
+  /* font-family: "Croissant One", cursive; */
+  font-family: "Lora", serif;
+  /* font-family: "Young Serif", serif; */
+}
 .container {
   margin: 30px auto;
   width: 350px;
+  padding: 10px;
 }
 
 h1 {
@@ -77,8 +117,8 @@ label {
   margin: 10px 0;
 }
 
-input[type='text'],
-input[type='number'] {
+input[type="text"],
+input[type="number"] {
   border: 1px solid #dedede;
   border-radius: 2px;
   display: block;
@@ -89,7 +129,7 @@ input[type='number'] {
 
 .btn {
   cursor: pointer;
-  background-color: #9c88ff;
+  background-color: #836eee;
   box-shadow: var(--box-shadow);
   color: #fff;
   border: 0;
@@ -98,6 +138,11 @@ input[type='number'] {
   margin: 10px 0 30px;
   padding: 10px;
   width: 100%;
+}
+
+.btn:hover {
+  transition: 0.5s ease;
+  background-color: #6145ee;
 }
 
 .btn:focus,
@@ -112,22 +157,12 @@ input[type='number'] {
 }
 
 .list li {
-  background-color: #fff;
-  box-shadow: var(--box-shadow);
   color: #333;
   display: flex;
   justify-content: space-between;
   position: relative;
   padding: 10px;
   margin: 10px 0;
-}
-
-.list li.plus {
-  border-right: 5px solid #2ecc71;
-}
-
-.list li.minus {
-  border-right: 5px solid #c0392b;
 }
 
 .delete-btn {
@@ -137,15 +172,13 @@ input[type='number'] {
   color: #fff;
   font-size: 20px;
   line-height: 20px;
-  padding: 2px 5px;
+  padding: 5px 5px;
   position: absolute;
   top: 50%;
   left: 0;
   transform: translate(-100%, -50%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
 }
 
-.list li:hover .delete-btn {
+.list .delete-btn {
   opacity: 1;
 }

@@ -3,31 +3,28 @@ import { GlobalContext } from "../Context/GlobalState";
 
 export const IncomeExpenses = () => {
   const { transactions } = useContext(GlobalContext);
-  const amounts = transactions.map((transaction) => transaction.amount);
-  const income = amounts
-    .filter((item) => item > 0)
-    .reduce((acc, item) => (acc += item), 0)
-    .toFixed(2);
+  const expense = transactions.reduce((acc, transaction) => {
+    transaction.amount < 0 && (acc += transaction.amount);
+    return acc;
+  }, 0);
 
-  const expense = (
-    amounts.filter((item) => item < 0).reduce((acc, item) => (acc += item), 0) *
-    -1
-  ).toFixed(2);
+  const income = transactions.reduce((acc, transaction) => {
+    transaction.amount > 0 && (acc += transaction.amount);
+    return acc;
+  }, 0);
   return (
-    <div>
-      <div className="inc-exp-container">
-        <div>
-          <h4>Income</h4>
-          <p id="money-plus" className="money plus">
-            +₹{income}
-          </p>
-        </div>
-        <div>
-          <h4>Expense</h4>
-          <p id="money-minus" className="money minus">
-            -₹{expense}
-          </p>
-        </div>
+    <div className="inc-exp-container w-4/5  h-36 mt-12 ">
+      <div className="bg-green-200 rounded-3xl mr-1 flex flex-col justify-center items-center">
+        <h4 className="font-bold">Income</h4>
+        <p id="money-plus" className=" font-bold money plus">
+          +₹{income}
+        </p>
+      </div>
+      <div className="bg-red-200 rounded-3xl ml-1 flex flex-col justify-center items-center">
+        <h4 className="font-bold">Expense</h4>
+        <p id="money-minus" className="font-bold money minus">
+          -₹{expense * -1}
+        </p>
       </div>
     </div>
   );
