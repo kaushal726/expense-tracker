@@ -1,0 +1,60 @@
+.total {
+  font-size: 19px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.filters {
+  margin-bottom: 16px;
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.dayHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 2px 7px;
+}
+
+.dayLabel {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.dayTotals {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dayTotals b {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dayTotals small {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.dayList {
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.footNote {
+  margin: 2px 2px 0;
+  font-size: 12px;
+  color: var(--ink-3);
+}

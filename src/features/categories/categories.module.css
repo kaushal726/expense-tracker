@@ -1,0 +1,143 @@
+/* Icon bubble */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 50%;
+  background: var(--badge-soft);
+  color: var(--badge-ink);
+}
+
+.sm {
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
+}
+
+.md {
+  width: 34px;
+  height: 34px;
+  font-size: 16px;
+}
+
+.lg {
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
+}
+
+/* Category chips */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chipsScroll {
+  margin-bottom: 14px;
+}
+
+/* Category form */
+.formLabel {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.iconGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--touch), 1fr));
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.iconOption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 17px;
+  color: var(--ink-2);
+}
+
+.iconOption[aria-checked="true"] {
+  border-color: var(--primary-line);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.colorRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.colorOption {
+  width: var(--touch);
+  height: var(--touch);
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background:
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    var(--swatch) border-box;
+  box-shadow: inset 0 0 0 14px var(--swatch);
+}
+
+.colorOption[aria-checked="true"] {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 11px var(--swatch);
+}
+
+/* Categories screen */
+.list {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 14px;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  background: none;
+  text-align: left;
+  color: inherit;
+}
+
+.row:first-child {
+  border-top: 0;
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  line-height: 1.3;
+}
+
+.rowName {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.rowDetail {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
