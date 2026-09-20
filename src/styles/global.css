@@ -1,0 +1,266 @@
+:root {
+  color-scheme: light;
+
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-sunken: #e9ebef;
+  --line: #e6e8ec;
+  --line-soft: #f0f1f4;
+  --ink: #111827;
+  --ink-2: #4b5563;
+  --ink-3: #8b93a1;
+  --primary: #233544;
+  --primary-hover: #1a2835;
+  --primary-soft: #eef2f5;
+  --primary-tint: #e6edf3;
+  --primary-line: #cfd9e3;
+  --accent: #d98e2b;
+  --accent-bg: #fdf5ea;
+  --accent-ink: #94560c;
+  --accent-line: #f3dcb9;
+  --due: #b42318;
+  --due-bg: #fef3f2;
+  --due-line: #fdd5d0;
+  --paid: #067647;
+  --paid-bg: #ecfdf3;
+  --paid-line: #bfeccf;
+  --neutral-bg: #f2f4f7;
+  --neutral: #475467;
+  --warn: #b54708;
+  --warn-bg: #fffaeb;
+
+  --surface-hover: #fafbfc;
+  /* Floating things (FAB actions, menus) that must stand out over a dimmed page. */
+  --raised: #ffffff;
+  --line-strong: #d3d7de;
+  --line-dashed: #d8dce2;
+  --track: #e7ebf0;
+  --track-strong: #d0d5dd;
+  --knob: #ffffff;
+  /* Text and icons drawn on a --primary fill; flips with the theme. */
+  --on-primary: #ffffff;
+  --count-bg: rgba(35, 53, 68, 0.08);
+  --overlay: rgba(17, 24, 39, 0.42);
+  --toast-bg: #1f2937;
+  --toast-ink: #ffffff;
+  --toast-warn: #f6d08f;
+  --due-strong: #912018;
+  --due-border: #f5c6c1;
+  --skeleton: #eaecf0;
+
+  --radius-lg: 16px;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --shadow-float: 0 6px 16px rgba(35, 53, 68, 0.24);
+  --shadow-sheet: 0 -8px 30px rgba(16, 24, 40, 0.12);
+  --shadow-card: 0 4px 14px rgba(16, 24, 40, 0.08);
+  --shadow-raised: 0 1px 2px rgba(16, 24, 40, 0.08);
+  --font: -apple-system, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --tabbar-height: 64px;
+  --sidenav-width: 232px;
+  --content-max: 760px;
+  --content-max-wide: 1060px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --touch: 44px;
+
+  /* Category colours — a calm, evenly-weighted set. Each is picked in More → Categories
+   * and read through src/data/categoryColors.ts. */
+  --cat-blue: #2f7ed8;
+  --cat-blue-soft: #e7f1fc;
+  --cat-teal: #0f9184;
+  --cat-teal-soft: #e0f3f1;
+  --cat-green: #2f9159;
+  --cat-green-soft: #e5f4ea;
+  --cat-amber: #b8831c;
+  --cat-amber-soft: #fbf2e0;
+  --cat-orange: #cb6f2a;
+  --cat-orange-soft: #fbeee3;
+  --cat-rose: #c44a64;
+  --cat-rose-soft: #fbe9ed;
+  --cat-violet: #7157c4;
+  --cat-violet-soft: #eeeafa;
+  --cat-slate: #566476;
+  --cat-slate-soft: #ebeef2;
+}
+
+/* Dark theme. src/app/theme.ts resolves the phone's setting (or the choice made in More)
+ * into <html data-theme>, so the values live in one place. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1116;
+  --surface: #171a21;
+  --surface-sunken: #1f232b;
+  --line: #272c35;
+  --line-soft: #1f232b;
+  --ink: #e9ebef;
+  --ink-2: #a9b0bc;
+  --ink-3: #7d8593;
+  --primary: #d3dfeb;
+  --primary-hover: #e4ecf4;
+  --primary-soft: #1e2631;
+  --primary-tint: #232d3a;
+  --primary-line: #313c4b;
+  --accent: #e0a44a;
+  --accent-bg: #2a2114;
+  --accent-ink: #e8b871;
+  --accent-line: #3d3020;
+  --due: #ff7a6d;
+  --due-bg: #2b1815;
+  --due-line: #45241f;
+  --paid: #4ed292;
+  --paid-bg: #12251b;
+  --paid-line: #1f3c2c;
+  --neutral-bg: #232831;
+  --neutral: #aab2be;
+  --warn: #e5a44a;
+  --warn-bg: #2a2114;
+
+  --surface-hover: #1d212a;
+  --raised: #2a313d;
+  --line-strong: #39404c;
+  --line-dashed: #39404c;
+  --track: #232831;
+  --track-strong: #39404c;
+  --knob: #e9ebef;
+  --on-primary: #10131a;
+  --count-bg: rgba(255, 255, 255, 0.1);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --toast-bg: #2c323d;
+  --toast-ink: #f3f5f8;
+  --toast-warn: #f6d08f;
+  --due-strong: #ff9a90;
+  --due-border: #4a2622;
+  --skeleton: #232831;
+
+  --shadow-float: 0 6px 16px rgba(0, 0, 0, 0.55);
+  --shadow-sheet: 0 -8px 30px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.4);
+  --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.4);
+
+  --cat-blue: #6fb0f0;
+  --cat-blue-soft: #16273a;
+  --cat-teal: #4fc9ba;
+  --cat-teal-soft: #0f2b29;
+  --cat-green: #62c98a;
+  --cat-green-soft: #12291c;
+  --cat-amber: #e0ad55;
+  --cat-amber-soft: #2a2114;
+  --cat-orange: #ec9760;
+  --cat-orange-soft: #2e1f14;
+  --cat-rose: #ef8098;
+  --cat-rose-soft: #2e161d;
+  --cat-violet: #a690ef;
+  --cat-violet-soft: #221d36;
+  --cat-slate: #9aa6b6;
+  --cat-slate-soft: #1f242c;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+body.sheet-open {
+  overflow: hidden;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A chip row that scrolls sideways past the page gutter. The fade on the right edge is
+ * the affordance: without it a half-visible chip just reads as broken. On desktop there
+ * is room to wrap instead. */
+.scroll-row {
+  display: flex;
+  gap: 8px;
+  margin-left: -16px;
+  margin-right: -16px;
+  padding: 2px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent 100%);
+}
+
+.scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-row > * {
+  flex: none;
+}
+
+@media (min-width: 900px) {
+  .scroll-row {
+    flex-wrap: wrap;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 899px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+@media (min-width: 900px) {
+  .mobile-only {
+    display: none !important;
+  }
+}

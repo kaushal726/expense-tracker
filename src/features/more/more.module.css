@@ -1,0 +1,128 @@
+.block {
+  margin-bottom: 14px;
+}
+
+.help {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.buttonRow > * {
+  flex: 1 1 140px;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 15.5px;
+}
+
+.statusRow[data-state="synced"] {
+  color: var(--paid);
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ink-3);
+}
+
+.statusDot[data-state="synced"] { background: var(--paid); }
+.statusDot[data-state="syncing"] { background: var(--accent); }
+.statusDot[data-state="offline"] { background: var(--warn); }
+.statusDot[data-state="error"] { background: var(--due); }
+
+.danger {
+  border-color: var(--due-border);
+  background: var(--due-bg);
+}
+
+/* Keeps the credit line at the foot of the screen, not floating under the content. */
+.screen {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - var(--tabbar-height) - var(--safe-top) - var(--safe-bottom) - 48px);
+}
+
+.footer {
+  margin-top: auto;
+  padding-top: 32px;
+  opacity: 0.55;
+}
+
+.credit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.heart {
+  color: var(--due);
+  font-size: 15px;
+  stroke-width: 2.4;
+  animation: heartbeat 2.4s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 12%, 100% { transform: scale(1); }
+  6% { transform: scale(1.22); }
+  9% { transform: scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heart { animation: none; }
+}
+
+.version {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.steps {
+  margin: 4px 0 8px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.theme {
+  margin-bottom: 10px;
+}
+
+.warning {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@media (min-width: 900px) {
+  .screen {
+    min-height: calc(100dvh - 112px);
+  }
+}

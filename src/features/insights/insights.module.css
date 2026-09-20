@@ -1,0 +1,277 @@
+.change {
+  margin: 10px 2px 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.change b {
+  font-variant-numeric: tabular-nums;
+}
+
+.changeUp b {
+  color: var(--due);
+}
+
+.changeDown b {
+  color: var(--paid);
+}
+
+.sectionTotal {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.rowAmount {
+  font-size: 14.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  margin: 0;
+  padding: 18px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 13.5px;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+/* Budget */
+.budget {
+  margin-bottom: 4px;
+}
+
+.budgetOver {
+  border-color: var(--due-border);
+  background: var(--due-bg);
+}
+
+.budgetTop {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.budgetSpent {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.budgetOf {
+  font-size: 13.5px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.budgetTrack {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.budgetFill {
+  width: var(--filled);
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+  transition: width 0.25s ease;
+}
+
+.budgetOver .budgetFill {
+  background: var(--due);
+}
+
+.budgetLine {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.budgetLine b {
+  font-variant-numeric: tabular-nums;
+}
+
+.budgetHint {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+/* Trend chart */
+.chart {
+  padding: 16px 14px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.plot {
+  position: relative;
+  height: 150px;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 100%;
+}
+
+.bar {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.barFill {
+  width: 100%;
+  height: var(--height);
+  min-height: 2px;
+  border-radius: 4px 4px 2px 2px;
+  background: var(--primary-line);
+}
+
+.bar:hover .barFill,
+.barSelected .barFill {
+  background: var(--primary);
+}
+
+.averageLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--accent-line);
+  pointer-events: none;
+}
+
+.averageTag {
+  position: absolute;
+  right: 0;
+  top: -16px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--accent-ink);
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.axis {
+  display: flex;
+  gap: 3px;
+  margin-top: 6px;
+}
+
+.axisLabel {
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  color: var(--ink-3);
+  text-align: center;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.caption {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+.caption b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Calendar heat map */
+.heat {
+  padding: 16px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.heatHead,
+.heatGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.heatHead {
+  margin-bottom: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+.heatCell,
+.heatPad {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+}
+
+.heatCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-sunken);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The tint sits over the empty square, so a light day still reads as a day. */
+.heatCell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--primary);
+  opacity: var(--intensity);
+}
+
+.heatDay {
+  position: relative;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--day-ink);
+}
+
+.heatLegend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  margin: 10px 0 0;
+  font-size: 10.5px;
+  color: var(--ink-3);
+}
+
+.heatKey {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--surface-sunken);
+}
+
+.heatKey::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--primary);
+  opacity: var(--intensity);
+}

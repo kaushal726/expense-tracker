@@ -1,0 +1,27 @@
+.row {
+  margin-bottom: 6px;
+}
+
+.chip,
+.clear {
+  flex: none;
+  min-height: var(--touch);
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--ink-3);
+  font-size: 14px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.chip:active {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.clear {
+  color: var(--ink-3);
+  opacity: 0.8;
+}

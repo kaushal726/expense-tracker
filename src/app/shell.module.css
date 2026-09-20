@@ -1,0 +1,320 @@
+.main {
+  min-height: 100dvh;
+  padding: calc(8px + var(--safe-top)) 16px calc(var(--tabbar-height) + var(--safe-bottom) + 24px);
+}
+
+.content {
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+/* Bottom tab bar (phones) */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: calc(var(--tabbar-height) + var(--safe-bottom));
+  padding: 6px 4px var(--safe-bottom);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3);
+  text-decoration: none;
+}
+
+.tab svg {
+  font-size: 21px;
+}
+
+.tab[aria-current="page"] {
+  color: var(--primary);
+}
+
+.tab .navIcon {
+  padding: 3px 16px;
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+
+.tab[aria-current="page"] .navIcon {
+  background: var(--primary-tint);
+}
+
+.navIcon {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Side navigation (desktop) */
+.sidenav {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--sidenav-width);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 20px 12px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 18px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.brandText small {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brand img {
+  border-radius: 8px;
+}
+
+.sideItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--touch);
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.sideItem svg {
+  font-size: 18px;
+}
+
+.sideItem:hover {
+  background: var(--bg);
+}
+
+.sideItem[aria-current="page"] {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.sideFoot {
+  margin-top: auto;
+  padding: 0 4px;
+}
+
+@media (min-width: 900px) {
+  .main {
+    margin-left: var(--sidenav-width);
+    padding: 32px 32px 48px;
+  }
+}
+
+/* Wide screens get a roomier column, so detail pages can sit side by side. */
+@media (min-width: 1240px) {
+  .content {
+    max-width: var(--content-max-wide);
+  }
+}
+
+/* Sync badge */
+.syncBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  min-height: 32px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.syncBadge::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink-3);
+}
+
+.syncBadge[data-state="synced"] {
+  background: var(--paid-bg);
+  border-color: var(--paid-line);
+  color: var(--paid);
+}
+
+.syncBadge[data-state="synced"]::before { background: var(--paid); }
+.syncBadge[data-state="syncing"]::before { background: var(--accent); }
+.syncBadge[data-state="offline"]::before { background: var(--warn); }
+.syncBadge[data-state="error"]::before { background: var(--due); }
+
+/* Update available bar */
+.update {
+  position: fixed;
+  overflow: hidden;
+  animation: updateIn 0.28s ease-out;
+  left: 16px;
+  right: 16px;
+  top: calc(12px + var(--safe-top));
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 10px 10px 10px 16px;
+  border-radius: 14px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--shadow-float);
+}
+
+.updateIcon {
+  flex: none;
+  display: flex;
+  font-size: 20px;
+}
+
+.updateBusy .updateIcon {
+  animation: updatePulse 1.1s ease-in-out infinite;
+}
+
+.updateText {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.updateText b {
+  display: block;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.updateText small {
+  font-size: 12px;
+  opacity: 0.72;
+}
+
+.updateButton {
+  flex: none;
+  min-width: 84px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 10px;
+  background: var(--on-primary);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.updateButton:disabled {
+  opacity: 0.85;
+}
+
+.updateSpinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  vertical-align: -3px;
+  animation: updateSpin 0.7s linear infinite;
+}
+
+/* Indeterminate line along the bottom while the new build swaps in. */
+.updateProgress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: color-mix(in srgb, var(--on-primary) 25%, transparent);
+}
+
+.updateProgress::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 35%;
+  background: var(--on-primary);
+  animation: updateSlide 1.1s ease-in-out infinite;
+}
+
+@keyframes updateIn {
+  from { opacity: 0; transform: translateY(-14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes updateSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes updatePulse {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(2px); opacity: 0.65; }
+}
+
+@keyframes updateSlide {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(320%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update,
+  .updateBusy .updateIcon,
+  .updateSpinner,
+  .updateProgress::after {
+    animation: none;
+  }
+}
+
+/* Boot skeleton */
+.boot {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 24px;
+}
