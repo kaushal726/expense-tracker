@@ -10,9 +10,10 @@ import { categoriesByUse, repeatTiles, type RepeatTile } from "../../data/repeat
 import { settingsOf } from "../../data/settings";
 import { useDB } from "../../data/store";
 import type { Expense } from "../../data/types";
-import { todayISO } from "../../lib/dates";
+import { formatDate, todayISO } from "../../lib/dates";
 import { formatMoney } from "../../lib/format";
 import { Button } from "../../ui/Button";
+import { FieldLabel, PageHeader, StatGrid } from "../../ui/layout";
 import { QuickAmounts } from "../../ui/QuickAmounts";
 import { useToast } from "../../ui/Toast";
 import { CategoryChips } from "../categories/CategoryChips";
@@ -105,28 +106,43 @@ export function AddScreen() {
 
   return (
     <div className={styles.screen}>
-      <header className={styles.amountBlock}>
-        <p className={styles.amount} aria-live="polite" aria-label={`Amount ${formatMoney(amount)}`}>
-          <span className={styles.currency}>₹</span>
-          <span className={draft ? styles.amountValue : styles.amountEmpty}>{formatDraft(draft)}</span>
-        </p>
-        <p className={styles.monthLine}>Spent this month · <b>{formatMoney(monthSpent)}</b></p>
-      </header>
+      <PageHeader title="Add expense" eyebrow={formatDate(today, { weekday: "long", day: "numeric", month: "long" })} />
 
-      <RepeatTiles tiles={tiles} armedKey={armedKey} onPick={pickTile} />
+      <p className={styles.amount} aria-live="polite" aria-label={`Amount ${formatMoney(amount)}`}>
+        <span className={styles.currency}>₹</span>
+        <span className={draft ? styles.amountValue : styles.amountEmpty}>{formatDraft(draft)}</span>
+      </p>
 
+      {tiles.length > 0 && (
+        <>
+          <FieldLabel>Your usuals</FieldLabel>
+          <RepeatTiles tiles={tiles} armedKey={armedKey} onPick={pickTile} />
+        </>
+      )}
+
+      <FieldLabel>Category</FieldLabel>
       <CategoryChips categories={categories} value={categoryId} onChange={pickCategory} onCreate={() => setNewCategoryOpen(true)} scrollable />
 
+      <FieldLabel>Amount</FieldLabel>
       <QuickAmounts value={draft} onChange={step} steps={QUICK_STEPS} />
       <NumberPad onPress={press} />
 
       <DetailsRow {...details} onChange={(patch) => setDetails((d) => ({ ...d, ...patch }))} />
       <Button variant="primary" block className={styles.save} onClick={save}>Save expense</Button>
 
+      <div className={styles.summary}>
+        <StatGrid
+          columns={2}
+          stats={[
+            { label: "Spent today", value: formatMoney(totalOf(todayExpenses)) },
+            { label: "Spent this month", value: formatMoney(monthSpent), tone: "primary" },
+          ]}
+        />
+      </div>
+
       <TodayList
         expenses={todayExpenses}
         categoriesById={categoriesById}
-        total={totalOf(todayExpenses)}
         onOpen={setEditing}
         onRepeat={repeat}
       />

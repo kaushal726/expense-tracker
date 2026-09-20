@@ -12,6 +12,7 @@ import { useConfirm } from "../../ui/Confirm";
 import { TextAreaField, TextField } from "../../ui/Field";
 import { QuickAmounts } from "../../ui/QuickAmounts";
 import { Segmented } from "../../ui/Segmented";
+import { FieldLabel } from "../../ui/layout";
 import { Sheet } from "../../ui/Sheet";
 import { useToast } from "../../ui/Toast";
 import { QUICK_STEPS } from "../add/quickSteps";
@@ -78,13 +79,13 @@ function ExpenseForm({ expense, onClose }: { expense: Expense; onClose: () => vo
       />
       <QuickAmounts value={amount} onChange={setAmount} steps={QUICK_STEPS} />
 
-      <p className={styles.formLabel}>Category</p>
+      <FieldLabel>Category</FieldLabel>
       <CategoryChips categories={categories} value={categoryId} onChange={setCategoryId} />
 
       <div className={styles.formGap} />
       <TextField label="Date" type="date" value={date} onChange={setDate} max={todayISO()} />
 
-      <p className={styles.formLabel}>Paid by</p>
+      <FieldLabel>Paid by</FieldLabel>
       <Segmented label="Paid by" options={SPEND_METHODS} value={method} onChange={setMethod} className={styles.formGap} />
 
       <TextAreaField label="Note" value={note} onChange={setNote} optional placeholder="What was it for?" />

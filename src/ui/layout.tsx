@@ -64,6 +64,11 @@ export function StatGrid({ stats, columns = 3 }: { stats: Stat[]; columns?: numb
   );
 }
 
+/** Small uppercase label above a group of controls, inside a form or a sheet. */
+export function FieldLabel({ children }: { children: ReactNode }) {
+  return <p className={styles.fieldLabel}>{children}</p>;
+}
+
 export function SectionTitle({ children, right }: { children: ReactNode; right?: ReactNode }) {
   return (
     <h2 className={styles.section}>

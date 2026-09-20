@@ -9,6 +9,7 @@ import { formatDayLabel } from "../../lib/dates";
 import { Button } from "../../ui/Button";
 import { TextAreaField } from "../../ui/Field";
 import { Segmented } from "../../ui/Segmented";
+import { FieldLabel } from "../../ui/layout";
 import { Sheet } from "../../ui/Sheet";
 import { DateRow } from "./DateRow";
 import styles from "./add.module.css";
@@ -30,15 +31,18 @@ export function DetailsRow({ date, method, note, onChange }: DetailsRowProps) {
   return (
     <>
       <button type="button" className={styles.details} onClick={() => setOpen(true)}>
-        <span>{summary}</span>
-        <FiChevronRight aria-hidden />
+        <span className={styles.detailsKey}>Date &amp; payment</span>
+        <span className={styles.detailsValue}>
+          {summary}
+          <FiChevronRight aria-hidden />
+        </span>
       </button>
 
       <Sheet open={open} onClose={() => setOpen(false)} title="Details" footer={<Button variant="primary" block onClick={() => setOpen(false)}>Done</Button>}>
-        <p className={styles.detailsLabel}>Date</p>
+        <FieldLabel>Date</FieldLabel>
         <DateRow value={date} onChange={(next) => onChange({ date: next })} />
 
-        <p className={styles.detailsLabel}>Paid by</p>
+        <FieldLabel>Paid by</FieldLabel>
         <Segmented label="Paid by" options={SPEND_METHODS} value={method} onChange={(next) => onChange({ method: next })} className={styles.detailsGap} />
 
         <TextAreaField label="Note" value={note} onChange={(next) => onChange({ note: next })} optional placeholder="What was it for?" maxLength={80} />
