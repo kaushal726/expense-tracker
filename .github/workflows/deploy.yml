@@ -1,10 +1,12 @@
 name: Deploy to GitHub Pages
 
+# Only `main` can deploy: the github-pages environment rejects every other branch.
+# Pull requests still get built and tested, so a branch is checked before it is merged.
 on:
   push:
-    # `spendly` is the working branch this app is built from; `main` keeps deploying
-    # once it is merged there.
-    branches: [main, spendly]
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -12,8 +14,9 @@ permissions:
   pages: write
   id-token: write
 
+# Per ref, so a pull-request build can never cancel a deploy already running on main.
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -38,6 +41,7 @@ jobs:
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
