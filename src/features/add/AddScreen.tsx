@@ -10,21 +10,22 @@ import { categoriesByUse, repeatTiles, type RepeatTile } from "../../data/repeat
 import { settingsOf } from "../../data/settings";
 import { useDB } from "../../data/store";
 import type { Expense } from "../../data/types";
-import { formatDate, todayISO } from "../../lib/dates";
+import { todayISO } from "../../lib/dates";
 import { formatMoney } from "../../lib/format";
 import { Button } from "../../ui/Button";
-import { FieldLabel, PageHeader, StatGrid } from "../../ui/layout";
+import { FieldLabel, StatGrid } from "../../ui/layout";
 import { QuickAmounts } from "../../ui/QuickAmounts";
 import { useToast } from "../../ui/Toast";
 import { CategoryChips } from "../categories/CategoryChips";
 import { CategoryFormSheet } from "../categories/CategoryFormSheet";
 import { ExpenseSheet } from "../expenses/ExpenseSheet";
 import { draftValue, formatDraft, fromAmount, pressKey, type PadKey } from "./amountDraft";
+import { DateSwitcher } from "./DateSwitcher";
 import { DetailsRow, type ExpenseDetails } from "./DetailsRow";
 import { NumberPad } from "./NumberPad";
 import { QUICK_STEPS } from "./quickSteps";
 import { RepeatTiles } from "./RepeatTiles";
-import { TodayList } from "./TodayList";
+import { DayList } from "./DayList";
 import styles from "./add.module.css";
 
 const INCOMPLETE_MESSAGE = "Enter an amount and pick a category";
@@ -45,9 +46,12 @@ export function AddScreen() {
   const categories = useMemo(() => categoriesByUse(db.expenses, db.categories, today), [db.expenses, db.categories, today]);
   const categoriesById = useMemo(() => new Map(db.categories.map((c) => [c.id, c])), [db.categories]);
   const tiles = useMemo(() => repeatTiles(db.expenses, db.categories, today), [db.expenses, db.categories, today]);
-  const todayExpenses = useMemo(
-    () => db.expenses.filter((e) => e.date === today).sort((a, b) => b.createdAt - a.createdAt),
-    [db.expenses, today],
+  const todayTotal = useMemo(() => totalOf(db.expenses.filter((e) => e.date === today)), [db.expenses, today]);
+  /* The list follows the date on the switcher, so an expense backdated to Friday is
+   * visible the moment it is saved. */
+  const dayExpenses = useMemo(
+    () => db.expenses.filter((e) => e.date === details.date).sort((a, b) => b.createdAt - a.createdAt),
+    [db.expenses, details.date],
   );
   const monthSpent = useMemo(() => {
     const cycle = cycleContaining(today, settingsOf(db).monthStartDay);
@@ -106,7 +110,8 @@ export function AddScreen() {
 
   return (
     <div className={styles.screen}>
-      <PageHeader title="Add expense" eyebrow={formatDate(today, { weekday: "long", day: "numeric", month: "long" })} />
+      <h1 className="visually-hidden">Add expense</h1>
+      <DateSwitcher value={details.date} onChange={(date) => setDetails((d) => ({ ...d, date }))} />
 
       <p className={styles.amount} aria-live="polite" aria-label={`Amount ${formatMoney(amount)}`}>
         <span className={styles.currency}>₹</span>
@@ -127,21 +132,23 @@ export function AddScreen() {
       <QuickAmounts value={draft} onChange={step} steps={QUICK_STEPS} />
       <NumberPad onPress={press} />
 
-      <DetailsRow {...details} onChange={(patch) => setDetails((d) => ({ ...d, ...patch }))} />
+      <DetailsRow method={details.method} note={details.note} onChange={(patch) => setDetails((d) => ({ ...d, ...patch }))} />
       <Button variant="primary" block className={styles.save} onClick={save}>Save expense</Button>
 
       <div className={styles.summary}>
         <StatGrid
           columns={2}
           stats={[
-            { label: "Spent today", value: formatMoney(totalOf(todayExpenses)) },
+            { label: "Spent today", value: formatMoney(todayTotal) },
             { label: "Spent this month", value: formatMoney(monthSpent), tone: "primary" },
           ]}
         />
       </div>
 
-      <TodayList
-        expenses={todayExpenses}
+      <DayList
+        date={details.date}
+        expenses={dayExpenses}
+        total={totalOf(dayExpenses)}
         categoriesById={categoriesById}
         onOpen={setEditing}
         onRepeat={repeat}
