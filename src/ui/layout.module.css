@@ -131,6 +131,15 @@
 .toneAccent .statLabel { color: var(--ink-2); }
 
 /* Section heading */
+.fieldLabel {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
 .section {
   margin: 22px 0 8px 2px;
   display: flex;

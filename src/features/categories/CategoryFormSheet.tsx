@@ -8,6 +8,7 @@ import type { Category } from "../../data/types";
 import { Button, IconButton } from "../../ui/Button";
 import { useConfirm } from "../../ui/Confirm";
 import { TextField } from "../../ui/Field";
+import { FieldLabel } from "../../ui/layout";
 import { Sheet } from "../../ui/Sheet";
 import { useToast } from "../../ui/Toast";
 import styles from "./categories.module.css";
@@ -80,7 +81,7 @@ function CategoryForm({ onClose, category, usage = 0, initialName = "", onSaved 
         maxLength={24}
       />
 
-      <p className={styles.formLabel}>Icon</p>
+      <FieldLabel>Icon</FieldLabel>
       <div className={styles.iconGrid} role="radiogroup" aria-label="Icon">
         {CATEGORY_ICON_NAMES.map((name) => {
           const Icon = categoryIcon(name);
@@ -100,7 +101,7 @@ function CategoryForm({ onClose, category, usage = 0, initialName = "", onSaved 
         })}
       </div>
 
-      <p className={styles.formLabel}>Colour</p>
+      <FieldLabel>Colour</FieldLabel>
       <div className={styles.colorRow} role="radiogroup" aria-label="Colour">
         {CATEGORY_COLORS.map((color) => (
           <button

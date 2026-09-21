@@ -4,17 +4,12 @@
 }
 
 /* The amount is the one loud thing on the screen. Everything else stays quiet. */
-.amountBlock {
-  padding: 18px 0 22px;
-  text-align: center;
-}
-
 .amount {
   display: flex;
   align-items: baseline;
   justify-content: center;
   gap: 6px;
-  margin: 0;
+  margin: 10px 0 26px;
   font-size: 64px;
   font-weight: 700;
   letter-spacing: -2.5px;
@@ -36,19 +31,6 @@
 .amountEmpty {
   color: var(--ink-3);
   opacity: 0.35;
-}
-
-.monthLine {
-  margin: 12px 0 0;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--ink-3);
-}
-
-.monthLine b {
-  font-weight: 650;
-  color: var(--ink-2);
-  font-variant-numeric: tabular-nums;
 }
 
 /* One-tap repeats */
@@ -141,29 +123,35 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
   min-height: var(--touch);
-  margin-bottom: 8px;
-  padding: 0 6px;
+  margin-bottom: 10px;
+  padding: 0 14px;
   border: 0;
-  background: none;
+  border-radius: var(--radius);
+  background: var(--surface);
   font-size: 13.5px;
+  text-align: left;
+}
+
+.detailsKey {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.detailsValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
   font-weight: 500;
   color: var(--ink-3);
 }
 
-.details svg {
+.detailsValue svg {
+  flex: none;
   font-size: 17px;
-}
-
-.detailsLabel {
-  margin: 4px 0 8px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  color: var(--ink-3);
 }
 
 .detailsGap {
@@ -176,42 +164,69 @@
   border-radius: var(--radius-lg);
 }
 
-/* Date chips, inside the details sheet */
-.dateRow {
+/* Date switcher, at the top of the screen */
+.dateSwitcher {
   display: flex;
-  gap: 8px;
-  margin-bottom: 18px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 0 2px;
 }
 
-.dateChip {
+.dateStep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  height: var(--touch);
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font-size: 19px;
+  color: var(--ink-3);
+}
+
+.dateStep:disabled {
+  opacity: 0.3;
+}
+
+.dateStep:not(:disabled):active {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.dateCurrent {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  flex: 1;
+  gap: 7px;
+  min-width: 140px;
   min-height: var(--touch);
-  padding: 0 12px;
-  border: 0;
-  border-radius: var(--radius-sm);
+  padding: 0 16px;
+  border-radius: 999px;
   background: var(--surface-sunken);
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--ink-2);
+  font-size: 14.5px;
+  font-weight: 650;
+  color: var(--ink);
   cursor: pointer;
 }
 
-.dateChip[aria-pressed="true"],
-.dateChip[data-active] {
-  background: var(--primary-tint);
-  color: var(--primary);
-}
-
-.datePick svg {
+.dateCurrent svg {
   font-size: 15px;
+  color: var(--ink-3);
 }
 
-/* The native picker covers the chip, so a tap anywhere on it opens the calendar. */
+/* Not today: the pill carries the accent, so an expense never lands on the wrong day unnoticed. */
+.dateOther {
+  background: var(--accent-bg);
+  color: var(--accent-ink);
+}
+
+.dateOther svg {
+  color: var(--accent-ink);
+}
+
 .dateInput {
   position: absolute;
   inset: 0;
@@ -224,12 +239,16 @@
   cursor: pointer;
 }
 
-/* Today */
-.today {
+/* Summary and today's list, below the form */
+.summary {
   margin-top: 30px;
 }
 
-.todayTotal {
+.today {
+  margin-top: 22px;
+}
+
+.dayTotal {
   font-size: 14px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;

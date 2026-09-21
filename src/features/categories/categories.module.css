@@ -40,15 +40,6 @@
 }
 
 /* Category form */
-.formLabel {
-  margin: 4px 0 8px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-
 .iconGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--touch), 1fr));
