@@ -4,12 +4,22 @@
 }
 
 /* The amount is the one loud thing on the screen. Everything else stays quiet. */
+.expression {
+  min-height: 18px;
+  margin: 6px 0 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+}
+
 .amount {
   display: flex;
   align-items: baseline;
   justify-content: center;
   gap: 6px;
-  margin: 10px 0 26px;
+  margin: 2px 0 24px;
   font-size: 64px;
   font-weight: 700;
   letter-spacing: -2.5px;
@@ -33,64 +43,11 @@
   opacity: 0.35;
 }
 
-/* One-tap repeats */
-.tiles {
-  margin-bottom: 16px;
-}
-
-.tile {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: var(--touch);
-  padding: 6px 14px 6px 10px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--tile-soft);
-  color: var(--tile-ink);
-  text-align: left;
-}
-
-.tileArmed {
-  box-shadow: inset 0 0 0 1.5px var(--tile-ink);
-}
-
-.tileIcon {
-  display: flex;
-  font-size: 16px;
-}
-
-.tileText {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.tileName {
-  font-size: 13px;
-  font-weight: 600;
-  opacity: 0.75;
-}
-
-.tileAmount {
-  font-size: 14.5px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.tileHint:not(:empty) {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  opacity: 0.7;
-}
-
 /* Number pad — bare numerals, so twelve keys don't read as twelve boxes. */
 .pad {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
   margin: 6px 0 14px;
 }
 
@@ -111,6 +68,23 @@
 
 .padKey:active {
   background: var(--surface-sunken);
+}
+
+/* + − = read as controls, not as digits. */
+.padOperator {
+  background: var(--surface-sunken);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.padOperator:active {
+  background: var(--primary-tint);
+  color: var(--primary);
+}
+
+.padWide {
+  grid-column: span 2;
 }
 
 .padKey svg {

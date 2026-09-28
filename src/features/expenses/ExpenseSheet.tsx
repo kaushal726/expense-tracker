@@ -5,7 +5,7 @@ import { SPEND_METHODS } from "../../data/methods";
 import { categoriesByUse } from "../../data/repeats";
 import { useDB } from "../../data/store";
 import { todayISO } from "../../lib/dates";
-import { parseAmount } from "../../lib/format";
+import { parseAmount, round2 } from "../../lib/format";
 import type { Expense, SpendMethod } from "../../data/types";
 import { Button, IconButton } from "../../ui/Button";
 import { useConfirm } from "../../ui/Confirm";
@@ -77,7 +77,12 @@ function ExpenseForm({ expense, onClose }: { expense: Expense; onClose: () => vo
         inputMode="decimal"
         autoFocus
       />
-      <QuickAmounts value={amount} onChange={setAmount} steps={QUICK_STEPS} />
+      <QuickAmounts
+        steps={QUICK_STEPS}
+        canClear={parseAmount(amount) > 0}
+        onAdd={(step) => setAmount(String(round2(parseAmount(amount) + step)))}
+        onClear={() => setAmount("")}
+      />
 
       <FieldLabel>Category</FieldLabel>
       <CategoryChips categories={categories} value={categoryId} onChange={setCategoryId} />

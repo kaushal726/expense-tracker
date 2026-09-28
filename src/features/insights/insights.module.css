@@ -43,9 +43,43 @@
   margin-bottom: 4px;
 }
 
-.budgetOver {
-  border-color: var(--due-border);
+.budgetClose {
+  background: var(--warn-bg);
+}
+
+.budgetOver,
+.budgetFarOver {
   background: var(--due-bg);
+}
+
+.budgetAlert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--warn);
+}
+
+.budgetAlert svg {
+  flex: none;
+  font-size: 17px;
+}
+
+.budgetOver .budgetAlert,
+.budgetFarOver .budgetAlert {
+  color: var(--due);
+}
+
+/* Badly over: the warning stops being a tint and becomes a block you cannot skim past. */
+.budgetFarOver .budgetAlert {
+  margin: -4px -4px 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--due);
+  color: var(--on-primary);
+  font-weight: 600;
 }
 
 .budgetTop {
@@ -83,7 +117,12 @@
   transition: width 0.25s ease;
 }
 
-.budgetOver .budgetFill {
+.budgetClose .budgetFill {
+  background: var(--warn);
+}
+
+.budgetOver .budgetFill,
+.budgetFarOver .budgetFill {
   background: var(--due);
 }
 
@@ -97,10 +136,58 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The four numbers a budget is actually for. */
+.budgetFacts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.budgetFacts > div {
+  min-width: 0;
+}
+
+.budgetFacts dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.budgetFacts dd {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.budgetHot {
+  color: var(--due);
+}
+
+.budgetCool {
+  color: var(--paid);
+}
+
 .budgetHint {
-  margin: 3px 0 0;
+  margin: 14px 0 0;
   font-size: 12.5px;
   color: var(--ink-3);
+}
+
+.budgetLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  padding: 0 18px;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
 }
 
 /* Trend chart */
@@ -206,12 +293,12 @@
 .heatGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
+  gap: 6px;
 }
 
 .heatHead {
-  margin-bottom: 6px;
-  font-size: 10.5px;
+  margin-bottom: 8px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--ink-3);
   text-align: center;
@@ -219,34 +306,28 @@
 
 .heatCell,
 .heatPad {
-  position: relative;
   aspect-ratio: 1;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .heatCell {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-sunken);
+  font-size: 13px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
-/* The tint sits over the empty square, so a light day still reads as a day. */
-.heatCell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--primary);
-  opacity: var(--intensity);
-}
+/* Four fixed steps, each with the text colour that stays readable on it. */
+.heatCell[data-level="0"] { background: var(--surface-sunken); color: var(--ink-3); }
+.heatCell[data-level="1"] { background: var(--heat-1); color: var(--ink); }
+.heatCell[data-level="2"] { background: var(--heat-2); color: var(--ink); }
+.heatCell[data-level="3"] { background: var(--heat-3); color: var(--on-primary); }
+.heatCell[data-level="4"] { background: var(--heat-4); color: var(--on-primary); }
 
-.heatDay {
-  position: relative;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--day-ink);
+.heatToday {
+  box-shadow: 0 0 0 2px var(--accent);
 }
 
 .heatLegend {
@@ -254,24 +335,20 @@
   align-items: center;
   justify-content: flex-end;
   gap: 5px;
-  margin: 10px 0 0;
-  font-size: 10.5px;
+  margin: 12px 0 0;
+  font-size: 11px;
   color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
 }
 
 .heatKey {
-  position: relative;
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  background: var(--surface-sunken);
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
 }
 
-.heatKey::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--primary);
-  opacity: var(--intensity);
-}
+.heatKey[data-level="0"] { background: var(--surface-sunken); }
+.heatKey[data-level="1"] { background: var(--heat-1); }
+.heatKey[data-level="2"] { background: var(--heat-2); }
+.heatKey[data-level="3"] { background: var(--heat-3); }
+.heatKey[data-level="4"] { background: var(--heat-4); }

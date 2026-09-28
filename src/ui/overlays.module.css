@@ -2,7 +2,7 @@
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--tabbar-height) + var(--safe-bottom) + 84px);
+  top: calc(var(--safe-top) + 12px);
   z-index: 200;
   display: flex;
   justify-content: center;
@@ -49,10 +49,10 @@
 
 @media (min-width: 900px) {
   .toastRegion {
-    bottom: 24px;
+    top: 24px;
   }
 }
 
 @keyframes toastIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(-8px); }
 }

@@ -1,27 +1,28 @@
 .row {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .chip,
 .clear {
   flex: none;
   min-height: var(--touch);
-  padding: 0 12px;
+  padding: 0 16px;
   border: 0;
   border-radius: 999px;
-  background: none;
-  color: var(--ink-3);
+  background: var(--surface-sunken);
+  color: var(--ink-2);
   font-size: 14px;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
 }
 
 .chip:active {
-  background: var(--surface-sunken);
-  color: var(--ink);
+  background: var(--primary-tint);
+  color: var(--primary);
 }
 
 .clear {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--line-dashed);
   color: var(--ink-3);
-  opacity: 0.8;
 }

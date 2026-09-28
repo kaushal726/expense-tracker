@@ -1,12 +1,12 @@
-/* The home screen is the add screen: pad, chips and tiles, with today's spending under it.
- * A repeat is two taps (tile, tile), a fresh one is amount → category → Save.
+/* The home screen is the add screen: a date, a calculator pad and the category chips,
+ * with that day's spending under it. An expense is category → amount → Save.
  */
 import { useMemo, useState } from "react";
 import { deleteExpense, duplicateExpense, saveExpense } from "../../data/actions";
 import { totalOf } from "../../data/insights";
 import { DEFAULT_METHOD } from "../../data/methods";
 import { cycleContaining } from "../../data/months";
-import { categoriesByUse, repeatTiles, type RepeatTile } from "../../data/repeats";
+import { categoriesByUse } from "../../data/repeats";
 import { settingsOf } from "../../data/settings";
 import { useDB } from "../../data/store";
 import type { Expense } from "../../data/types";
@@ -19,12 +19,11 @@ import { useToast } from "../../ui/Toast";
 import { CategoryChips } from "../categories/CategoryChips";
 import { CategoryFormSheet } from "../categories/CategoryFormSheet";
 import { ExpenseSheet } from "../expenses/ExpenseSheet";
-import { draftValue, formatDraft, fromAmount, pressKey, type PadKey } from "./amountDraft";
+import { addStep, EMPTY_PAD, padDisplay, padExpression, padValue, pressPad, type PadKey } from "./padState";
 import { DateSwitcher } from "./DateSwitcher";
 import { DetailsRow, type ExpenseDetails } from "./DetailsRow";
 import { NumberPad } from "./NumberPad";
 import { QUICK_STEPS } from "./quickSteps";
-import { RepeatTiles } from "./RepeatTiles";
 import { DayList } from "./DayList";
 import styles from "./add.module.css";
 
@@ -36,16 +35,14 @@ export function AddScreen() {
   const today = todayISO();
 
   const freshDetails = (): ExpenseDetails => ({ date: today, method: DEFAULT_METHOD, note: "" });
-  const [draft, setDraft] = useState("");
+  const [pad, setPad] = useState(EMPTY_PAD);
   const [categoryId, setCategoryId] = useState("");
   const [details, setDetails] = useState<ExpenseDetails>(freshDetails);
-  const [armedKey, setArmedKey] = useState<string | null>(null);
   const [newCategoryOpen, setNewCategoryOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
 
   const categories = useMemo(() => categoriesByUse(db.expenses, db.categories, today), [db.expenses, db.categories, today]);
   const categoriesById = useMemo(() => new Map(db.categories.map((c) => [c.id, c])), [db.categories]);
-  const tiles = useMemo(() => repeatTiles(db.expenses, db.categories, today), [db.expenses, db.categories, today]);
   const todayTotal = useMemo(() => totalOf(db.expenses.filter((e) => e.date === today)), [db.expenses, today]);
   /* The list follows the date on the switcher, so an expense backdated to Friday is
    * visible the moment it is saved. */
@@ -59,12 +56,12 @@ export function AddScreen() {
   }, [db, today]);
 
   const reset = () => {
-    setDraft("");
+    setPad(EMPTY_PAD);
     setDetails(freshDetails());
-    setArmedKey(null);
   };
 
-  const amount = draftValue(draft);
+  const amount = padValue(pad);
+  const expression = padExpression(pad);
 
   const save = (): void => {
     if (amount <= 0 || !categoryId) return toast(INCOMPLETE_MESSAGE, { tone: "error" });
@@ -73,34 +70,7 @@ export function AddScreen() {
     toast("Expense saved", { action: { label: "Undo", onClick: () => deleteExpense(id) } });
   };
 
-  const press = (key: PadKey) => {
-    setDraft((d) => pressKey(d, key));
-    setArmedKey(null);
-  };
-
-  const step = (next: string) => {
-    setDraft(next);
-    setArmedKey(null);
-  };
-
-  const pickCategory = (id: string) => {
-    setCategoryId(id);
-    setArmedKey(null);
-  };
-
-  /* First tap loads the tile onto the pad, a second tap on the same tile saves it. */
-  const pickTile = (tile: RepeatTile) => {
-    if (tile.key === armedKey && draftValue(draft) === tile.amount && categoryId === tile.categoryId) {
-      const id = saveExpense({ ...details, amount: tile.amount, categoryId: tile.categoryId, note: "" }, null);
-      reset();
-      toast("Expense saved", { action: { label: "Undo", onClick: () => deleteExpense(id) } });
-      return;
-    }
-    setDraft(fromAmount(tile.amount));
-    setCategoryId(tile.categoryId);
-    setDetails((d) => ({ ...d, note: "" }));
-    setArmedKey(tile.key);
-  };
+  const press = (key: PadKey) => setPad((p) => pressPad(p, key));
 
   const repeat = (expense: Expense) => {
     const id = duplicateExpense(expense.id, today);
@@ -113,23 +83,22 @@ export function AddScreen() {
       <h1 className="visually-hidden">Add expense</h1>
       <DateSwitcher value={details.date} onChange={(date) => setDetails((d) => ({ ...d, date }))} />
 
+      <p className={styles.expression} aria-hidden>{expression}</p>
       <p className={styles.amount} aria-live="polite" aria-label={`Amount ${formatMoney(amount)}`}>
         <span className={styles.currency}>₹</span>
-        <span className={draft ? styles.amountValue : styles.amountEmpty}>{formatDraft(draft)}</span>
+        <span className={amount || pad.draft ? styles.amountValue : styles.amountEmpty}>{padDisplay(pad)}</span>
       </p>
 
-      {tiles.length > 0 && (
-        <>
-          <FieldLabel>Your usuals</FieldLabel>
-          <RepeatTiles tiles={tiles} armedKey={armedKey} onPick={pickTile} />
-        </>
-      )}
-
       <FieldLabel>Category</FieldLabel>
-      <CategoryChips categories={categories} value={categoryId} onChange={pickCategory} onCreate={() => setNewCategoryOpen(true)} scrollable />
+      <CategoryChips categories={categories} value={categoryId} onChange={setCategoryId} onCreate={() => setNewCategoryOpen(true)} scrollable />
 
       <FieldLabel>Amount</FieldLabel>
-      <QuickAmounts value={draft} onChange={step} steps={QUICK_STEPS} />
+      <QuickAmounts
+        steps={QUICK_STEPS}
+        canClear={amount !== 0 || pad.operator !== null}
+        onAdd={(step) => setPad((p) => addStep(p, step))}
+        onClear={() => setPad(EMPTY_PAD)}
+      />
       <NumberPad onPress={press} />
 
       <DetailsRow method={details.method} note={details.note} onChange={(patch) => setDetails((d) => ({ ...d, ...patch }))} />

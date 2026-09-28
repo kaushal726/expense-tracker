@@ -1,27 +1,26 @@
-/* "+50 +100 +500 +1000" under a money field: taps add up, so a shopkeeper can build an
- * amount without the keypad. */
+/* "+50 +100 +500 +1000" beside a money field: taps add up, so most amounts never need
+ * the keypad. The caller owns the amount, so this works for a plain field and for the
+ * calculator pad alike. */
 import { cx } from "../lib/cx";
-import { parseAmount, round2 } from "../lib/format";
 import styles from "./quickAmounts.module.css";
 
 const STEPS = [50, 100, 500, 1000];
 
 interface QuickAmountsProps {
-  value: string;
-  onChange: (value: string) => void;
+  onAdd: (step: number) => void;
+  onClear: () => void;
+  /** Hides the Clear chip while there is nothing to clear. */
+  canClear: boolean;
   steps?: number[];
 }
 
-export function QuickAmounts({ value, onChange, steps = STEPS }: QuickAmountsProps) {
-  const add = (step: number) => onChange(String(round2(parseAmount(value) + step)));
+export function QuickAmounts({ onAdd, onClear, canClear, steps = STEPS }: QuickAmountsProps) {
   return (
     <div className={cx(styles.row, "scroll-row")}>
       {steps.map((step) => (
-        <button key={step} type="button" className={styles.chip} onClick={() => add(step)}>+{step}</button>
+        <button key={step} type="button" className={styles.chip} onClick={() => onAdd(step)}>+{step}</button>
       ))}
-      {parseAmount(value) > 0 && (
-        <button type="button" className={styles.clear} onClick={() => onChange("")}>Clear</button>
-      )}
+      {canClear && <button type="button" className={styles.clear} onClick={onClear}>Clear</button>}
     </div>
   );
 }
