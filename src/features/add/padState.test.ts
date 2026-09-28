@@ -60,6 +60,11 @@ describe("adding up on the pad", () => {
     expect(padValue(type(["5", "0", "plus", "plus"]))).toBe(50);
   });
 
+  it("clears everything, pending operator and all", () => {
+    expect(pressPad(type(["1", "0", "0", "plus", "2", "5"]), "clear")).toEqual(EMPTY_PAD);
+    expect(pressPad(EMPTY_PAD, "clear")).toEqual(EMPTY_PAD);
+  });
+
   it("takes back a pending operator on backspace", () => {
     const pad = type(["5", "0", "plus", "back"]);
     expect(pad.operator).toBeNull();

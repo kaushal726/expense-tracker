@@ -19,8 +19,8 @@
   align-items: baseline;
   justify-content: center;
   gap: 6px;
-  margin: 2px 0 24px;
-  font-size: 64px;
+  margin: 4px 0 26px;
+  font-size: 72px;
   font-weight: 700;
   letter-spacing: -2.5px;
   line-height: 1;
@@ -28,7 +28,7 @@
 }
 
 .currency {
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 600;
   letter-spacing: 0;
   color: var(--ink-3);
@@ -83,13 +83,15 @@
   color: var(--primary);
 }
 
-.padWide {
-  grid-column: span 2;
+.padUtility {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink-3);
 }
 
 .padKey svg {
   font-size: 23px;
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 
 /* Date, payment and note, folded into one line */
@@ -144,7 +146,7 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 6px 0 2px;
+  padding: 2px 0 0;
 }
 
 .dateStep {
@@ -241,7 +243,7 @@
 
 @media (min-width: 900px) {
   .amount {
-    font-size: 72px;
+    font-size: 78px;
   }
 
   .pad,

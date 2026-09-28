@@ -11,7 +11,7 @@ const MAX_DECIMALS = 2;
 export const PAD_DIGITS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"] as const;
 export type PadDigit = (typeof PAD_DIGITS)[number];
 export type Operator = "plus" | "minus";
-export type PadKey = PadDigit | "dot" | "back" | Operator | "equals";
+export type PadKey = PadDigit | "dot" | "back" | "clear" | Operator | "equals";
 
 export interface PadState {
   /** The number being typed right now, as typed ("12", "12.", "12.50"). */
@@ -40,6 +40,8 @@ export function padValue(state: PadState): number {
 
 export function pressPad(state: PadState, key: PadKey): PadState {
   switch (key) {
+    case "clear":
+      return EMPTY_PAD;
     case "plus":
     case "minus":
       return { draft: "", total: padValue(state), operator: key };

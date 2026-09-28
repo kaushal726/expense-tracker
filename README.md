@@ -16,9 +16,8 @@ read it).
 Adding an expense has to be nearly effortless, or it doesn't get done:
 
 - The home screen **is** the add screen — a big in-app number pad, not the OS keyboard.
-- **Quick chips** (`+10 +20 +50 +100 +200 +500 +1000`) add up, so most amounts need two taps.
 - The pad **adds up**: `+` and `−` mean a split bill or a running total is worked out on
-  the pad rather than in your head.
+  the pad rather than in your head, with `C` to start over.
 - **Categories are chips**, most-used first; adding one is a tap and a name.
 - A date switcher sits at the top: arrows step a day at a time, and the pill opens the
   phone's date picker, so a forgotten expense from Friday is a tap away.
@@ -32,7 +31,7 @@ src/
   data/         types, IndexedDB storage, store, actions, spending cycles, insights maths, backup
   sync/         offline outbox + sync engine, record <-> Sheet row mapping
   features/
-    add/        the date switcher, calculator pad, quick chips, that day's list
+    add/        the date switcher, calculator pad, that day's list
     history/    every entry, grouped by day, with filters kept in the URL
     insights/   totals, budget, trend chart, calendar heat map, month- and year-on-year
     period/     the period selector shared by History and Insights
