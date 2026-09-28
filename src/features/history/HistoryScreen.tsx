@@ -4,17 +4,18 @@ import { FiInbox, FiSearch } from "react-icons/fi";
 import { setQuery, type Route } from "../../app/router";
 import { duplicateExpense, deleteExpense } from "../../data/actions";
 import { groupByDay } from "../../data/grouping";
-import { inRange, totalOf, UNCATEGORISED_FILTER, UNCATEGORISED_NAME } from "../../data/insights";
+import { inRange, summarise, totalOf, UNCATEGORISED_FILTER, UNCATEGORISED_NAME } from "../../data/insights";
 import { methodLabel } from "../../data/methods";
 import { PERIOD_PRESETS } from "../../data/periods";
 import { settingsOf } from "../../data/settings";
 import { useDB } from "../../data/store";
 import type { Category, Expense } from "../../data/types";
 import { formatDayLabel, todayISO } from "../../lib/dates";
-import { formatMoney, plural } from "../../lib/format";
+import { formatMoney, formatMoneyShort, plural } from "../../lib/format";
 import { EmptyState } from "../../ui/feedback";
+import type { CSSProperties } from "react";
 import { FilterBar } from "../../ui/FilterBar";
-import { PageHeader } from "../../ui/layout";
+import { PageHeader, StatGrid } from "../../ui/layout";
 import type { Option } from "../../ui/OptionList";
 import { useToast } from "../../ui/Toast";
 import { ExpenseRow } from "../expenses/ExpenseRow";
@@ -56,6 +57,10 @@ export function HistoryScreen({ route }: { route: Route }) {
 
   const groups = useMemo(() => groupByDay(filtered), [filtered]);
   const total = totalOf(filtered);
+  const summary = useMemo(() => summarise(filtered, period.range, today), [filtered, period.range, today]);
+  /* Every day's bar is drawn against the biggest day, so the shape of the period reads
+   * without having to compare the numbers. */
+  const biggestDay = Math.max(1, ...groups.map((g) => g.total));
 
   const categoryOptions: Option[] = useMemo(() => {
     const orphans = inPeriod.filter((e) => !categoriesById.has(e.categoryId)).length;
@@ -74,12 +79,18 @@ export function HistoryScreen({ route }: { route: Route }) {
 
   return (
     <>
-      <PageHeader
-        title="History"
-        eyebrow={period.rangeLabel}
-        actions={<span className={styles.total}>{formatMoney(total)}</span>}
-      />
+      <PageHeader title="History" eyebrow={period.rangeLabel} />
       <PeriodChips filter={period} presets={PERIOD_PRESETS} />
+      <div className={styles.summary}>
+        <StatGrid
+          columns={3}
+          stats={[
+            { label: "Spent", value: formatMoneyShort(total), tone: "primary" },
+            { label: "Entries", value: String(filtered.length) },
+            { label: "A day", value: formatMoneyShort(summary.dailyAverage) },
+          ]}
+        />
+      </div>
       <FilterBar
         className={styles.filters}
         search={{ value: search, onChange: (q) => setQuery(route, { q: q || null }), placeholder: "Search notes, categories, amounts" }}
@@ -98,11 +109,15 @@ export function HistoryScreen({ route }: { route: Route }) {
           {groups.map((group) => (
             <section key={group.date}>
               <header className={styles.dayHeader}>
-                <span className={styles.dayLabel}>{formatDayLabel(group.date)}</span>
-                <span className={styles.dayTotals}>
-                  <b>{formatMoney(group.total)}</b>
-                  <small>{formatMoney(group.runningTotal)} to date</small>
-                </span>
+                <div className={styles.dayTop}>
+                  <span className={styles.dayLabel}>{formatDayLabel(group.date)}</span>
+                  <span className={styles.dayTotal}>{formatMoney(group.total)}</span>
+                </div>
+                <div className={styles.dayBar} style={{ "--share": `${(group.total / biggestDay) * 100}%` } as CSSProperties} aria-hidden />
+                <div className={styles.dayMeta}>
+                  <span>{plural(group.expenses.length, "expense")}</span>
+                  <span>{formatMoney(group.runningTotal)} to date</span>
+                </div>
               </header>
               <div className={styles.dayList}>
                 {group.expenses.map((expense) => (

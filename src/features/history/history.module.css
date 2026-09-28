@@ -1,50 +1,74 @@
-.total {
-  font-size: 19px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+.summary {
+  margin-bottom: 16px;
 }
 
 .filters {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .groups {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 22px;
 }
 
+/* The day header sticks while its own expenses scroll past, so you always know
+ * which day you are looking at in a long month. */
 .dayHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 6px 2px 9px;
+  background: var(--bg);
+}
+
+.dayTop {
   display: flex;
-  align-items: flex-end;
+  align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 2px 7px;
 }
 
 .dayLabel {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.2px;
-  text-transform: uppercase;
-  color: var(--ink-3);
+  letter-spacing: -0.01em;
 }
 
-.dayTotals {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+.dayTotal {
+  font-size: 15px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-.dayTotals b {
-  font-size: 14px;
-  font-weight: 700;
+/* How big this day was against the biggest day on screen. */
+.dayBar {
+  position: relative;
+  height: 4px;
+  margin-top: 7px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
 }
 
-.dayTotals small {
+.dayBar::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--share);
+  min-width: 4px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+
+.dayMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
   font-size: 11.5px;
   color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
 }
 
 .dayList {

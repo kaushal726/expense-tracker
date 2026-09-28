@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+import { colorVars } from "../../data/categoryColors";
 import { formatMoney } from "../../lib/format";
 import { methodLabel } from "../../data/methods";
 import type { Category, Expense } from "../../data/types";
@@ -18,9 +20,10 @@ export function ExpenseRow({ expense, category, onOpen, onRepeat }: ExpenseRowPr
   const longPress = useLongPress(onRepeat);
   const name = category?.name ?? UNCATEGORISED_NAME;
   const detail = expense.note.trim() || methodLabel(expense.method);
+  const { ink } = colorVars(category?.color ?? "slate");
 
   return (
-    <button type="button" className={styles.row} onClick={onOpen} {...longPress}>
+    <button type="button" className={styles.row} style={{ "--row-ink": ink } as CSSProperties} onClick={onOpen} {...longPress}>
       <CategoryBadge icon={category?.icon ?? "tag"} color={category?.color ?? "slate"} />
       <span className={styles.rowText}>
         <span className={styles.rowTitle}>{name}</span>
