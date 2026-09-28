@@ -3,7 +3,7 @@ import { stampChanges } from "./changes";
 import { emptyDB } from "./seed";
 import type { Category } from "./types";
 
-const category = (id: string, name: string): Category => ({ id, name, icon: "tag", color: "slate", monthlyBudget: 0, createdAt: 0, updatedAt: 0 });
+const category = (id: string, name: string): Category => ({ id, name, icon: "tag", color: "slate", monthlyBudget: 0, sortOrder: 0, createdAt: 0, updatedAt: 0 });
 
 describe("stampChanges", () => {
   it("stamps only records whose reference changed, and reports deletions", () => {

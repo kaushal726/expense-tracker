@@ -25,6 +25,8 @@ export interface Category {
   color: string;
   /** 0 means no budget for this category. */
   monthlyBudget: number;
+  /** Where the chip sits on the Add screen; arranged by hand in More → Categories. */
+  sortOrder: number;
   createdAt: number;
   updatedAt: number;
 }

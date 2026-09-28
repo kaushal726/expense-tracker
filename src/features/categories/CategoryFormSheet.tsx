@@ -1,8 +1,9 @@
 import { useState, type CSSProperties } from "react";
 import { FiTrash2 } from "react-icons/fi";
 import { deleteCategory, saveCategory, type CategoryInput } from "../../data/actions";
-import { CATEGORY_COLORS, colorVars, DEFAULT_CATEGORY_COLOR } from "../../data/categoryColors";
+import { CATEGORY_COLORS, colorVars, nextCategoryColor } from "../../data/categoryColors";
 import { CATEGORY_ICON_NAMES, categoryIcon, DEFAULT_CATEGORY_ICON } from "../../data/categoryIcons";
+import { useDB } from "../../data/store";
 import { parseAmount, plural } from "../../lib/format";
 import type { Category } from "../../data/types";
 import { Button, IconButton } from "../../ui/Button";
@@ -24,8 +25,8 @@ interface CategoryFormSheetProps {
   onSaved?: (categoryId: string) => void;
 }
 
-function emptyDraft(name: string): CategoryInput {
-  return { name, icon: DEFAULT_CATEGORY_ICON, color: DEFAULT_CATEGORY_COLOR, monthlyBudget: 0 };
+function emptyDraft(name: string, existing: Category[]): CategoryInput {
+  return { name, icon: DEFAULT_CATEGORY_ICON, color: nextCategoryColor(existing), monthlyBudget: 0 };
 }
 
 export function CategoryFormSheet(props: CategoryFormSheetProps) {
@@ -33,8 +34,9 @@ export function CategoryFormSheet(props: CategoryFormSheetProps) {
 }
 
 function CategoryForm({ onClose, category, usage = 0, initialName = "", onSaved }: CategoryFormSheetProps) {
+  const categories = useDB().categories;
   const [draft, setDraft] = useState<CategoryInput>(() =>
-    category ? { name: category.name, icon: category.icon, color: category.color, monthlyBudget: category.monthlyBudget } : emptyDraft(initialName));
+    category ? { name: category.name, icon: category.icon, color: category.color, monthlyBudget: category.monthlyBudget } : emptyDraft(initialName, categories));
   const [budget, setBudget] = useState(() => (category?.monthlyBudget ? String(category.monthlyBudget) : ""));
   const [error, setError] = useState("");
   const confirm = useConfirm();
@@ -43,6 +45,10 @@ function CategoryForm({ onClose, category, usage = 0, initialName = "", onSaved 
   const submit = () => {
     const name = draft.name.trim();
     if (!name) return setError("Give it a name");
+    // Two categories with one name is the quickest way to end up with split totals.
+    if (categories.some((c) => c.id !== category?.id && c.name.trim().toLowerCase() === name.toLowerCase())) {
+      return setError("A category with that name already exists");
+    }
     const id = saveCategory({ ...draft, name, monthlyBudget: parseAmount(budget) }, category?.id ?? null);
     onSaved?.(id);
     onClose();

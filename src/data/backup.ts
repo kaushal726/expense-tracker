@@ -59,6 +59,7 @@ function toCategory(raw: Loose): Category | null {
     icon: str(raw.icon) || DEFAULT_CATEGORY_ICON,
     color: str(raw.color) || DEFAULT_CATEGORY_COLOR,
     monthlyBudget: Math.max(0, round2(num(raw.monthlyBudget))),
+    sortOrder: Math.max(0, Math.round(num(raw.sortOrder))),
     createdAt: num(raw.createdAt),
     updatedAt: num(raw.updatedAt),
   };

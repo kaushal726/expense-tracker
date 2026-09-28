@@ -6,7 +6,7 @@ import { APP_SETTINGS_ID, type DB } from "./types";
 function sample(): DB {
   return {
     expenses: [{ id: "e1", date: "2026-09-20", amount: 120.5, categoryId: "c1", note: "Chai", method: "upi", createdAt: 1, updatedAt: 2 }],
-    categories: [{ id: "c1", name: "Food", icon: "coffee", color: "amber", monthlyBudget: 3000, createdAt: 1, updatedAt: 2 }],
+    categories: [{ id: "c1", name: "Food", icon: "coffee", color: "amber", monthlyBudget: 3000, sortOrder: 2, createdAt: 1, updatedAt: 2 }],
     settings: [{ id: APP_SETTINGS_ID, monthlyBudget: 20000, monthStartDay: 5, currency: "₹", seededAt: 1, updatedAt: 2 }],
   };
 }
@@ -38,7 +38,7 @@ describe("backup", () => {
     } };
     const db = parseBackup(JSON.stringify(file));
     expect(db.expenses[0]).toMatchObject({ amount: 90.46, method: "upi", categoryId: "", note: "" });
-    expect(db.categories[0]).toMatchObject({ name: "Category", icon: "tag", color: "slate", monthlyBudget: 0 });
+    expect(db.categories[0]).toMatchObject({ name: "Category", icon: "tag", color: "slate", monthlyBudget: 0, sortOrder: 0 });
     expect(db.settings[0]).toMatchObject({ id: APP_SETTINGS_ID, monthStartDay: 28, monthlyBudget: 0, currency: "₹" });
   });
 });

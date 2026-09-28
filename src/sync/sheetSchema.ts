@@ -45,7 +45,7 @@ const SPECS: Record<Collection, CollectionSpec> = {
   },
   categories: {
     leading: ["name"],
-    blank: { name: "", icon: DEFAULT_CATEGORY_ICON, color: DEFAULT_CATEGORY_COLOR, monthlyBudget: 0, createdAt: 0, updatedAt: 0 },
+    blank: { name: "", icon: DEFAULT_CATEGORY_ICON, color: DEFAULT_CATEGORY_COLOR, monthlyBudget: 0, sortOrder: 0, createdAt: 0, updatedAt: 0 },
   },
   settings: {
     leading: [],

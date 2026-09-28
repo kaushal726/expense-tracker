@@ -3,10 +3,10 @@
  */
 import { useMemo, useState } from "react";
 import { deleteExpense, duplicateExpense, saveExpense } from "../../data/actions";
+import { categoriesInOrder } from "../../data/categoryOrder";
 import { totalOf } from "../../data/insights";
 import { DEFAULT_METHOD } from "../../data/methods";
 import { cycleContaining } from "../../data/months";
-import { categoriesByUse } from "../../data/repeats";
 import { settingsOf } from "../../data/settings";
 import { useDB } from "../../data/store";
 import type { Expense } from "../../data/types";
@@ -39,7 +39,7 @@ export function AddScreen() {
   const [newCategoryOpen, setNewCategoryOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
 
-  const categories = useMemo(() => categoriesByUse(db.expenses, db.categories, today), [db.expenses, db.categories, today]);
+  const categories = useMemo(() => categoriesInOrder(db.categories), [db.categories]);
   const categoriesById = useMemo(() => new Map(db.categories.map((c) => [c.id, c])), [db.categories]);
   const todayTotal = useMemo(() => totalOf(db.expenses.filter((e) => e.date === today)), [db.expenses, today]);
   /* The list follows the date on the switcher, so an expense backdated to Friday is

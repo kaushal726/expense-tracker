@@ -18,7 +18,8 @@ Adding an expense has to be nearly effortless, or it doesn't get done:
 - The home screen **is** the add screen — a big in-app number pad, not the OS keyboard.
 - The pad **adds up**: `+` and `−` mean a split bill or a running total is worked out on
   the pad rather than in your head, with `C` to start over.
-- **Categories are chips**, most-used first; adding one is a tap and a name.
+- **Categories are chips** in the order you arrange them in More → Categories, so the
+  ones you reach for stay in front. Adding one is a tap and a name.
 - A date switcher sits at the top: arrows step a day at a time, and the pill opens the
   phone's date picker, so a forgotten expense from Friday is a tap away.
 - Press and hold any entry to repeat it on today.
@@ -93,7 +94,8 @@ device can catch up.
 4. **Deploy**, approve the permissions (Google warns the app is unverified: **Advanced → Go to … (unsafe)**; it is your own script).
 5. Copy the **Web app URL** (ends in `/exec`) and paste it into **More → Google Sheet sync**.
 
-Tabs (Expenses, Categories, Settings) are created when data first arrives. Dates are written
+Tabs (Expenses, Categories, Settings) are created when data first arrives, and a column is
+added for any field the app starts sending, so a new field needs no change to `Code.gs`. Dates are written
 as real date cells ("20 Sept 2026"), and every row carries a readable `updatedOn` column next
 to the raw `updatedAt`.
 

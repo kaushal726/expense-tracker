@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { FiTrash2 } from "react-icons/fi";
 import { deleteExpense, saveExpense } from "../../data/actions";
 import { SPEND_METHODS } from "../../data/methods";
-import { categoriesByUse } from "../../data/repeats";
+import { categoriesInOrder } from "../../data/categoryOrder";
 import { useDB } from "../../data/store";
 import { todayISO } from "../../lib/dates";
 import { parseAmount, round2 } from "../../lib/format";
@@ -34,7 +34,7 @@ function ExpenseForm({ expense, onClose }: { expense: Expense; onClose: () => vo
   const db = useDB();
   const confirm = useConfirm();
   const toast = useToast();
-  const categories = useMemo(() => categoriesByUse(db.expenses, db.categories, todayISO()), [db.expenses, db.categories]);
+  const categories = useMemo(() => categoriesInOrder(db.categories), [db.categories]);
 
   const [amount, setAmount] = useState(String(expense.amount));
   const [categoryId, setCategoryId] = useState(expense.categoryId);

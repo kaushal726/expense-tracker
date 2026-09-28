@@ -1,6 +1,7 @@
 /* Every change the UI can make to the data. Each one is a single commit(). */
 import { round2 } from "../lib/format";
 import { uid } from "../lib/ids";
+import { categoriesInOrder, moveCategory, nextSortOrder, type MoveDirection } from "./categoryOrder";
 import { removeById, upsertById } from "./listOps";
 import { emptyDB } from "./seed";
 import { settingsOf } from "./settings";
@@ -54,12 +55,22 @@ export function saveCategory(input: CategoryInput, editingId: string | null): st
       ...input,
       name: input.name.trim(),
       monthlyBudget: Math.max(0, round2(input.monthlyBudget)),
+      sortOrder: existing?.sortOrder ?? nextSortOrder(db.categories),
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };
     return { ...db, categories: upsertById(db.categories, category) };
   });
   return id;
+}
+
+/** Moves a category one place up or down the Add screen's chips. */
+export function reorderCategory(id: string, direction: MoveDirection): void {
+  commit((db) => ({ ...db, categories: moveCategory(db.categories, id, direction) }));
+}
+
+export function orderedCategories(db: DB): Category[] {
+  return categoriesInOrder(db.categories);
 }
 
 export function categoryUsage(db: DB, categoryId: string): number {

@@ -42,7 +42,7 @@ function history(seed: number): History {
 
   const categories: Category[] = Array.from({ length: 1 + Math.floor(rnd() * 5) }, (_, i) => ({
     id: `cat${i}`, name: `Category ${i}`, icon: "tag", color: "slate",
-    monthlyBudget: pick([0, 0, 2000]), createdAt: i, updatedAt: i,
+    monthlyBudget: pick([0, 0, 2000]), sortOrder: i, createdAt: i, updatedAt: i,
   }));
   // Some expenses point at a category that has since been deleted.
   const categoryIds = [...categories.map((c) => c.id), "gone", ""];

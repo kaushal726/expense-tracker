@@ -26,7 +26,7 @@ const STARTER_CATEGORIES: Pick<Category, "name" | "icon" | "color">[] = [
 
 /** Written once, on first run only — a category deleted later never comes back. */
 export function starterCategories(now: number): Category[] {
-  return STARTER_CATEGORIES.map((c, i) => ({ ...c, id: uid(), monthlyBudget: 0, createdAt: now + i, updatedAt: now + i }));
+  return STARTER_CATEGORIES.map((c, i) => ({ ...c, id: uid(), monthlyBudget: 0, sortOrder: i, createdAt: now + i, updatedAt: now + i }));
 }
 
 export function emptyDB(): DB {
