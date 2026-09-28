@@ -15,8 +15,9 @@ interface ToastState extends ToastOptions {
 
 type ShowToast = (message: string, options?: ToastOptions) => void;
 
-const TOAST_MS = 2600;
-const TOAST_WITH_ACTION_MS = 5000;
+const TOAST_MS = 1500;
+/** Long enough to reach for Undo, short enough to stay out of the way. */
+const TOAST_WITH_ACTION_MS = 3200;
 
 const ToastContext = createContext<ShowToast>(() => {});
 

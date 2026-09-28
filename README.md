@@ -17,10 +17,11 @@ Adding an expense has to be nearly effortless, or it doesn't get done:
 
 - The home screen **is** the add screen — a big in-app number pad, not the OS keyboard.
 - **Quick chips** (`+10 +20 +50 +100 +200 +500 +1000`) add up, so most amounts need two taps.
-- **Repeat tiles** are built from your own history — the category + amount combinations
-  used most over the last 60 days. One tap fills the pad, a second tap saves it.
+- The pad **adds up**: `+` and `−` mean a split bill or a running total is worked out on
+  the pad rather than in your head.
 - **Categories are chips**, most-used first; adding one is a tap and a name.
-- Date defaults to today, with Yesterday one tap away.
+- A date switcher sits at the top: arrows step a day at a time, and the pill opens the
+  phone's date picker, so a forgotten expense from Friday is a tap away.
 - Press and hold any entry to repeat it on today.
 
 ## Project layout
@@ -31,7 +32,7 @@ src/
   data/         types, IndexedDB storage, store, actions, spending cycles, insights maths, backup
   sync/         offline outbox + sync engine, record <-> Sheet row mapping
   features/
-    add/        the number pad, quick chips, repeat tiles, today's list
+    add/        the date switcher, calculator pad, quick chips, that day's list
     history/    every entry, grouped by day, with filters kept in the URL
     insights/   totals, budget, trend chart, calendar heat map, month- and year-on-year
     period/     the period selector shared by History and Insights
@@ -77,6 +78,10 @@ npm run build       # production build in dist/
   whatever period is selected.
 - **Projection** is the current daily rate carried to the end of the period — shown only
   while the period is still running.
+- **A budget** turns the month into a running check: what a day allows, what you are
+  actually spending a day, what is safe for the days left, and how far ahead of an even
+  pace you already are. Past 90% of the budget the card warns; past 150% the warning
+  stops being a tint and becomes a block.
 
 ## Google Sheet backend (optional, one-time)
 

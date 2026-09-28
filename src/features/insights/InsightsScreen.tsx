@@ -1,6 +1,6 @@
 /* Where the money went — the same sums seen from a month, a year or a decade away. */
 import { useMemo } from "react";
-import { FiPieChart } from "react-icons/fi";
+import { FiPieChart, FiTarget } from "react-icons/fi";
 import { href, type Route } from "../../app/router";
 import { colorVars } from "../../data/categoryColors";
 import {
@@ -8,11 +8,12 @@ import {
   inRange, monthSeries, summarise, totalOf, trend, UNCATEGORISED_FILTER, UNCATEGORISED_NAME, yearSeries, yearsOfHistory,
   type CategorySlice,
 } from "../../data/insights";
+import { cycleContaining, daysBetween, shiftCycle } from "../../data/months";
 import { isSingleCycle, PERIOD_PRESETS, PREVIOUS_LABELS, previousRange } from "../../data/periods";
 import { settingsOf } from "../../data/settings";
 import { useDB } from "../../data/store";
 import { formatDate, formatDayLabel, todayISO } from "../../lib/dates";
-import { formatMoney, formatMoneyShort, formatShare, plural } from "../../lib/format";
+import { formatMoney, formatMoneyShort, formatShare, plural, round2 } from "../../lib/format";
 import { BarList, type BarItem } from "../../ui/BarList";
 import { EmptyState } from "../../ui/feedback";
 import { ListGroup, ListRow, PageHeader, SectionTitle, StatGrid, type Stat } from "../../ui/layout";
@@ -48,6 +49,12 @@ export function InsightsScreen({ route }: { route: Route }) {
     const range = previousRange(period.range, period.preset, today, monthStartDay);
     return range ? totalOf(inRange(db.expenses, range)) : null;
   }, [db.expenses, period.range, period.preset, today, monthStartDay]);
+
+  const lastMonthPerDay = useMemo(() => {
+    const previousCycle = shiftCycle(cycleContaining(today, monthStartDay), monthStartDay, -1);
+    const spent = totalOf(inRange(db.expenses, previousCycle));
+    return spent ? round2(spent / daysBetween(previousCycle.from, previousCycle.to)) : 0;
+  }, [db.expenses, today, monthStartDay]);
 
   const months = useMemo(() => monthSeries(db.expenses, today, monthStartDay, COMPARISON_MONTHS), [db.expenses, today, monthStartDay]);
   const historyYears = useMemo(() => yearsOfHistory(db.expenses, today, monthStartDay), [db.expenses, today, monthStartDay]);
@@ -105,10 +112,23 @@ export function InsightsScreen({ route }: { route: Route }) {
         <ChangeLine current={summary.total} previous={previous} label={PREVIOUS_LABELS[period.preset] ?? "the period before"} />
       )}
 
-      {monthlyBudget > 0 && singleCycle && (
+      {singleCycle && (
         <>
           <SectionTitle>Budget</SectionTitle>
-          <BudgetCard status={budgetStatus(summary.total, monthlyBudget, summary.daysLeft)} daysLeft={summary.daysLeft} />
+          {monthlyBudget > 0 ? (
+            <BudgetCard
+              status={budgetStatus(summary.total, monthlyBudget, summary.daysTotal, summary.daysElapsed)}
+              daysLeft={summary.daysLeft}
+              lastMonthPerDay={lastMonthPerDay}
+            />
+          ) : (
+            <EmptyState
+              icon={<FiTarget />}
+              title="No budget set"
+              message="Set one and this shows what you can spend a day, how far ahead of that you are, and what is safe for the rest of the month."
+              action={<a className={styles.budgetLink} href={href("more/budget")}>Set a monthly budget</a>}
+            />
+          )}
         </>
       )}
 

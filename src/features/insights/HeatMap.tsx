@@ -1,18 +1,18 @@
-import type { CSSProperties } from "react";
 import type { DayPoint } from "../../data/insights";
-import { formatDate, parseISODate } from "../../lib/dates";
+import { formatDate, parseISODate, todayISO } from "../../lib/dates";
+import { cx } from "../../lib/cx";
 import { formatMoney } from "../../lib/format";
 import styles from "./insights.module.css";
 
 const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
-/** How dark a square can get, so even the biggest day keeps its label readable. */
-const MAX_INTENSITY = 0.92;
-const MIN_INTENSITY = 0.14;
-/** Past this tint the square is dark enough that the day number has to flip. */
-const INK_FLIP_AT = 0.5;
+/* Four steps read at a glance; a continuous tint just turns into mud. */
+const LEVELS = 4;
+const LEVEL_KEYS = [0, 1, 2, 3, 4];
 
-function intensityOf(amount: number, max: number): number {
-  return max && amount ? MIN_INTENSITY + (amount / max) * (MAX_INTENSITY - MIN_INTENSITY) : 0;
+/** 0 for a day with nothing on it, then 1–4 by how big the day was against the biggest. */
+function levelOf(amount: number, max: number): number {
+  if (!amount || !max) return 0;
+  return Math.max(1, Math.ceil((amount / max) * LEVELS));
 }
 
 /** Monday-first offset, so the grid lines up with the weekday header. */
@@ -25,6 +25,7 @@ export function HeatMap({ points }: { points: DayPoint[] }) {
   if (!points.length) return null;
   const max = Math.max(...points.map((p) => p.amount));
   const lead = weekdayOffset(points[0].date);
+  const today = todayISO();
 
   return (
     <div className={styles.heat}>
@@ -33,26 +34,21 @@ export function HeatMap({ points }: { points: DayPoint[] }) {
       </div>
       <div className={styles.heatGrid}>
         {Array.from({ length: lead }, (_, i) => <span key={`pad-${i}`} className={styles.heatPad} aria-hidden />)}
-        {points.map((point) => {
-          const intensity = intensityOf(point.amount, max);
-          return (
-            <span
-              key={point.date}
-              className={styles.heatCell}
-              style={{ "--intensity": intensity, "--day-ink": intensity > INK_FLIP_AT ? "var(--on-primary)" : "var(--ink-3)" } as CSSProperties}
-              title={`${formatDate(point.date)} · ${formatMoney(point.amount)}`}
-            >
-              <span className={styles.heatDay}>{Number(point.date.slice(8))}</span>
-            </span>
-          );
-        })}
-      </div>
-      <p className={styles.heatLegend} aria-hidden>
-        <span>Less</span>
-        {[0, 0.25, 0.5, 0.75, 1].map((step) => (
-          <span key={step} className={styles.heatKey} style={{ "--intensity": step ? MIN_INTENSITY + step * (MAX_INTENSITY - MIN_INTENSITY) : 0 } as CSSProperties} />
+        {points.map((point) => (
+          <span
+            key={point.date}
+            className={cx(styles.heatCell, point.date === today && styles.heatToday)}
+            data-level={levelOf(point.amount, max)}
+            title={`${formatDate(point.date)} · ${formatMoney(point.amount)}`}
+          >
+            {Number(point.date.slice(8))}
+          </span>
         ))}
-        <span>More</span>
+      </div>
+      <p className={styles.heatLegend}>
+        <span>Nothing</span>
+        {LEVEL_KEYS.map((level) => <span key={level} className={styles.heatKey} data-level={level} />)}
+        <span>{formatMoney(max)}</span>
       </p>
     </div>
   );

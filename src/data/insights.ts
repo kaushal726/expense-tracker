@@ -229,6 +229,12 @@ export function yearsOfHistory(expenses: Expense[], today: string, monthStartDay
 
 /* ---------- budget ---------- */
 
+/** How far past the budget counts as merely over, and as badly over. */
+const CLOSE_SHARE = 90;
+const FAR_OVER_SHARE = 150;
+
+export type BudgetSeverity = "ok" | "close" | "over" | "farOver";
+
 export interface BudgetStatus {
   budget: number;
   spent: number;
@@ -238,18 +244,42 @@ export interface BudgetStatus {
   usedShare: number;
   /** What is left to spend each remaining day without going over. */
   perDayLeft: number;
+  /** The even daily rate the budget allows across the whole period. */
+  dailyAllowance: number;
+  /** What an even spender would be at by now. */
+  expectedByNow: number;
+  /** Spent minus that: positive means running hot. */
+  aheadOfPace: number;
+  /** What has been spent each day so far. */
+  paceSoFar: number;
   overspent: boolean;
+  severity: BudgetSeverity;
 }
 
-export function budgetStatus(spent: number, budget: number, daysLeft: number): BudgetStatus {
+function severityOf(usedShare: number): BudgetSeverity {
+  if (usedShare > FAR_OVER_SHARE) return "farOver";
+  if (usedShare > 100) return "over";
+  return usedShare >= CLOSE_SHARE ? "close" : "ok";
+}
+
+export function budgetStatus(spent: number, budget: number, daysTotal: number, daysElapsed: number): BudgetStatus {
   const left = round2(budget - spent);
+  const daysLeft = Math.max(0, daysTotal - daysElapsed);
+  const usedShare = budget ? round2((spent / budget) * 100) : 0;
+  const dailyAllowance = daysTotal > 0 ? round2(budget / daysTotal) : 0;
+  const expectedByNow = round2(dailyAllowance * daysElapsed);
   return {
     budget,
     spent,
     left,
-    usedShare: budget ? round2((spent / budget) * 100) : 0,
+    usedShare,
     perDayLeft: daysLeft > 0 ? round2(Math.max(0, left) / daysLeft) : 0,
+    dailyAllowance,
+    expectedByNow,
+    aheadOfPace: round2(spent - expectedByNow),
+    paceSoFar: daysElapsed > 0 ? round2(spent / daysElapsed) : 0,
     overspent: left < 0,
+    severity: severityOf(usedShare),
   };
 }
 

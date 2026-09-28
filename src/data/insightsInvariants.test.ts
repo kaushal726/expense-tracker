@@ -112,10 +112,23 @@ function checkPeriod({ expenses, categories, monthStartDay }: History, range: Da
   }
 
   // A budget's numbers agree with each other.
-  const budget = budgetStatus(total, 2000, summary.daysLeft);
-  expect(budget.left).toBeCloseTo(2000 - total, 2);
+  const BUDGET = 2000;
+  const budget = budgetStatus(total, BUDGET, summary.daysTotal, summary.daysElapsed);
+  expect(budget.left).toBeCloseTo(BUDGET - total, 2);
   expect(budget.overspent).toBe(budget.left < 0);
   expect(budget.perDayLeft * summary.daysLeft).toBeLessThanOrEqual(Math.max(0, budget.left) + CENT * summary.daysLeft + CENT);
+  // The allowance spread over the period is the budget, and the pace numbers agree with
+  // it — both are rounded to paise, so they can only drift half a paisa per day.
+  expect(Math.abs(budget.dailyAllowance * summary.daysTotal - BUDGET)).toBeLessThanOrEqual(CENT * summary.daysTotal + CENT);
+  expect(budget.expectedByNow).toBeCloseTo(budget.dailyAllowance * summary.daysElapsed, 2);
+  expect(budget.aheadOfPace).toBeCloseTo(total - budget.expectedByNow, 2);
+  if (summary.daysElapsed) {
+    expect(Math.abs(budget.paceSoFar * summary.daysElapsed - total)).toBeLessThanOrEqual(CENT * summary.daysElapsed + CENT);
+  }
+  // The warning only fires once the budget is actually in trouble.
+  expect(budget.severity === "ok").toBe(budget.usedShare < 90);
+  expect(["over", "farOver"].includes(budget.severity)).toBe(budget.usedShare > 100);
+  expect(budget.severity === "farOver").toBe(budget.usedShare > 150);
 
   const top = biggestExpenses(within, TOP_LIMIT);
   expect(top.length).toBe(Math.min(TOP_LIMIT, within.length));
