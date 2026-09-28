@@ -14,16 +14,14 @@ import { todayISO } from "../../lib/dates";
 import { formatMoney } from "../../lib/format";
 import { Button } from "../../ui/Button";
 import { FieldLabel, StatGrid } from "../../ui/layout";
-import { QuickAmounts } from "../../ui/QuickAmounts";
 import { useToast } from "../../ui/Toast";
 import { CategoryChips } from "../categories/CategoryChips";
 import { CategoryFormSheet } from "../categories/CategoryFormSheet";
 import { ExpenseSheet } from "../expenses/ExpenseSheet";
-import { addStep, EMPTY_PAD, padDisplay, padExpression, padValue, pressPad, type PadKey } from "./padState";
+import { EMPTY_PAD, padDisplay, padExpression, padValue, pressPad, type PadKey } from "./padState";
 import { DateSwitcher } from "./DateSwitcher";
 import { DetailsRow, type ExpenseDetails } from "./DetailsRow";
 import { NumberPad } from "./NumberPad";
-import { QUICK_STEPS } from "./quickSteps";
 import { DayList } from "./DayList";
 import styles from "./add.module.css";
 
@@ -92,13 +90,6 @@ export function AddScreen() {
       <FieldLabel>Category</FieldLabel>
       <CategoryChips categories={categories} value={categoryId} onChange={setCategoryId} onCreate={() => setNewCategoryOpen(true)} scrollable />
 
-      <FieldLabel>Amount</FieldLabel>
-      <QuickAmounts
-        steps={QUICK_STEPS}
-        canClear={amount !== 0 || pad.operator !== null}
-        onAdd={(step) => setPad((p) => addStep(p, step))}
-        onClear={() => setPad(EMPTY_PAD)}
-      />
       <NumberPad onPress={press} />
 
       <DetailsRow method={details.method} note={details.note} onChange={(patch) => setDetails((d) => ({ ...d, ...patch }))} />

@@ -8,18 +8,20 @@ const ROWS: PadKey[][] = [
   ["1", "2", "3", "back"],
   ["4", "5", "6", "minus"],
   ["7", "8", "9", "plus"],
-  ["dot", "0", "equals"],
+  ["clear", "0", "dot", "equals"],
 ];
 
 const LABELS: Partial<Record<PadKey, string>> = {
   dot: ".",
   back: "Backspace",
+  clear: "Clear",
   equals: "=",
   plus: OPERATOR_LABELS.plus,
   minus: OPERATOR_LABELS.minus,
 };
 
 const OPERATOR_KEYS: PadKey[] = ["plus", "minus", "equals"];
+const UTILITY_KEYS: PadKey[] = ["back", "clear"];
 
 export function NumberPad({ onPress }: { onPress: (key: PadKey) => void }) {
   return (
@@ -28,11 +30,11 @@ export function NumberPad({ onPress }: { onPress: (key: PadKey) => void }) {
         <button
           key={key}
           type="button"
-          className={cx(styles.padKey, OPERATOR_KEYS.includes(key) && styles.padOperator, key === "equals" && styles.padWide)}
+          className={cx(styles.padKey, OPERATOR_KEYS.includes(key) && styles.padOperator, UTILITY_KEYS.includes(key) && styles.padUtility)}
           aria-label={LABELS[key] ?? key}
           onClick={() => onPress(key)}
         >
-          {key === "back" ? <FiDelete aria-hidden /> : (LABELS[key] ?? key)}
+          {key === "back" ? <FiDelete aria-hidden /> : key === "clear" ? "C" : (LABELS[key] ?? key)}
         </button>
       ))}
     </div>
