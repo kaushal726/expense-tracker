@@ -227,6 +227,20 @@ export function monthSeries(expenses: Expense[], today: string, monthStartDay: n
   return recentCycles(today, monthStartDay, count).map((span) => toTrendPoint(expenses, span, cycleShortLabel(span)));
 }
 
+/** Drops the empty run at the front of a series: a first month of use should not open on
+ *  eleven blank bars. Never trims below `keepAtLeast`, so the chart keeps its shape. */
+export function trimLeadingEmpty(points: TrendPoint[], keepAtLeast: number): TrendPoint[] {
+  const firstUsed = points.findIndex((p) => p.amount !== 0);
+  if (firstUsed < 0) return points.slice(-keepAtLeast);
+  return points.slice(Math.min(firstUsed, Math.max(0, points.length - keepAtLeast)));
+}
+
+/** The average of the buckets that had something in them — the line worth drawing. */
+export function meanOfUsed(points: TrendPoint[]): number {
+  const used = points.filter((p) => p.amount !== 0);
+  return used.length ? round2(used.reduce((sum, p) => sum + p.amount, 0) / used.length) : 0;
+}
+
 /** The last `count` years, whatever period is on screen. */
 export function yearSeries(expenses: Expense[], today: string, monthStartDay: number, count: number): TrendPoint[] {
   return recentYears(today, monthStartDay, count).map((span) => toTrendPoint(expenses, span, yearLabel(span, monthStartDay)));

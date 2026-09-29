@@ -5,8 +5,8 @@ import { href, type Route } from "../../app/router";
 import { colorVars } from "../../data/categoryColors";
 import {
   biggestExpenses, budgetStatus, busiestDays, byCategory, byDay, granularityFor,
-  inRange, monthSeries, summarise, totalOf, trend, UNCATEGORISED_FILTER, UNCATEGORISED_NAME,
-  withPrevious, yearSeries, yearsOfHistory,
+  inRange, meanOfUsed, monthSeries, summarise, totalOf, trend, trimLeadingEmpty,
+  UNCATEGORISED_FILTER, UNCATEGORISED_NAME, withPrevious, yearSeries, yearsOfHistory,
 } from "../../data/insights";
 import { cycleContaining, cycleLabel, daysBetween, shiftCycle } from "../../data/months";
 import { isSingleCycle, PERIOD_PRESETS, PREVIOUS_LABELS, previousRange } from "../../data/periods";
@@ -27,6 +27,8 @@ import styles from "./insights.module.css";
 
 const TOP_LIST_LIMIT = 5;
 const COMPARISON_MONTHS = 12;
+/** Below this the chart stops being a chart, so a short history keeps a few blank bars. */
+const MIN_COMPARISON_BARS = 4;
 const MAX_COMPARISON_YEARS = 10;
 
 const TREND_TITLES = { day: "Day by day", month: "Month by month", year: "Year by year" } as const;
@@ -63,7 +65,10 @@ export function InsightsScreen({ route }: { route: Route }) {
     return spent ? round2(spent / daysBetween(previousCycle.from, previousCycle.to)) : 0;
   }, [db.expenses, today, monthStartDay]);
 
-  const months = useMemo(() => monthSeries(db.expenses, today, monthStartDay, COMPARISON_MONTHS), [db.expenses, today, monthStartDay]);
+  const months = useMemo(
+    () => trimLeadingEmpty(monthSeries(db.expenses, today, monthStartDay, COMPARISON_MONTHS), MIN_COMPARISON_BARS),
+    [db.expenses, today, monthStartDay],
+  );
   const historyYears = useMemo(() => yearsOfHistory(db.expenses, today, monthStartDay), [db.expenses, today, monthStartDay]);
   const years = useMemo(
     () => yearSeries(db.expenses, today, monthStartDay, Math.min(MAX_COMPARISON_YEARS, historyYears)),
@@ -200,13 +205,15 @@ export function InsightsScreen({ route }: { route: Route }) {
         </>
       )}
 
-      <SectionTitle>Last 12 months</SectionTitle>
-      <TrendChart points={months} label="Last 12 months" emptyText="Not enough history yet." />
+      <SectionTitle right={<span className={styles.sectionTotal}>{formatMoney(meanOfUsed(months))} a month</span>}>
+        {months.length === COMPARISON_MONTHS ? "Last 12 months" : "Month by month"}
+      </SectionTitle>
+      <TrendChart points={months} average={meanOfUsed(months)} label="Month by month" emptyText="Not enough history yet." />
 
       {historyYears > 1 && (
         <>
           <SectionTitle>Year on year</SectionTitle>
-          <TrendChart points={years} label="Year on year" emptyText="Not enough history yet." />
+          <TrendChart points={years} average={meanOfUsed(years)} label="Year on year" emptyText="Not enough history yet." />
         </>
       )}
     </>

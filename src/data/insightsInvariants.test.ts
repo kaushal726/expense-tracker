@@ -8,7 +8,8 @@ import { addDays } from "../lib/dates";
 import { round2 } from "../lib/format";
 import {
   biggestExpenses, budgetStatus, busiestDays, byCategory, byDay, changeVs, granularityFor,
-  inRange, monthSeries, summarise, totalOf, trend, UNCATEGORISED_ID, withPrevious, yearSeries, yearsOfHistory,
+  inRange, meanOfUsed, monthSeries, summarise, totalOf, trend, trimLeadingEmpty, UNCATEGORISED_ID,
+  withPrevious, yearSeries, yearsOfHistory,
 } from "./insights";
 import { cycleContaining, daysBetween, recentCycles, recentYears, shiftCycle, yearContaining } from "./months";
 import { presetRange, previousRange, type DateRange, type PeriodPreset } from "./periods";
@@ -211,5 +212,35 @@ describe("category movement", () => {
     const original = slice("food", 500);
     const [moved] = withPrevious([original], [slice("food", 500)]);
     expect(moved).toMatchObject({ ...original, previous: 500, change: 0 });
+  });
+});
+
+describe("comparison series", () => {
+  const point = (key: string, amount: number) => ({ key, label: key, from: "2026-01-01", to: "2026-01-31", amount, count: amount ? 1 : 0 });
+
+  it("drops the blank run at the front", () => {
+    const series = [point("a", 0), point("b", 0), point("c", 500), point("d", 700)];
+    expect(trimLeadingEmpty(series, 2).map((p) => p.key)).toEqual(["c", "d"]);
+  });
+
+  it("keeps a minimum number of bars so the chart still reads as one", () => {
+    const series = [point("a", 0), point("b", 0), point("c", 0), point("d", 900)];
+    expect(trimLeadingEmpty(series, 3).map((p) => p.key)).toEqual(["b", "c", "d"]);
+  });
+
+  it("leaves a series that starts with something alone", () => {
+    const series = [point("a", 100), point("b", 0)];
+    expect(trimLeadingEmpty(series, 2)).toEqual(series);
+  });
+
+  it("falls back to the tail when nothing was ever spent", () => {
+    const series = [point("a", 0), point("b", 0), point("c", 0)];
+    expect(trimLeadingEmpty(series, 2).map((p) => p.key)).toEqual(["b", "c"]);
+  });
+
+  it("averages only the buckets that had something in them", () => {
+    expect(meanOfUsed([point("a", 0), point("b", 300), point("c", 500)])).toBe(400);
+    expect(meanOfUsed([point("a", 0)])).toBe(0);
+    expect(meanOfUsed([])).toBe(0);
   });
 });

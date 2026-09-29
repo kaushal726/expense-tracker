@@ -1,10 +1,11 @@
 import type { CSSProperties } from "react";
 import { colorVars } from "../../data/categoryColors";
-import { formatMoney } from "../../lib/format";
+import { categoryIcon } from "../../data/categoryIcons";
+import { UNCATEGORISED_NAME } from "../../data/insights";
 import { methodLabel } from "../../data/methods";
 import type { Category, Expense } from "../../data/types";
-import { UNCATEGORISED_NAME } from "../../data/insights";
-import { CategoryBadge } from "../categories/CategoryBadge";
+import { formatTime, toISODate } from "../../lib/dates";
+import { formatMoney } from "../../lib/format";
 import { useLongPress } from "./useLongPress";
 import styles from "./expenses.module.css";
 
@@ -16,18 +17,38 @@ interface ExpenseRowProps {
   onRepeat: () => void;
 }
 
+/* The time an expense was entered is only the time it was spent when the two are the
+ * same day — a backdated entry would otherwise claim a time it never had. */
+function timeOf(expense: Expense): string {
+  return toISODate(new Date(expense.createdAt)) === expense.date ? formatTime(expense.createdAt) : "";
+}
+
 export function ExpenseRow({ expense, category, onOpen, onRepeat }: ExpenseRowProps) {
   const longPress = useLongPress(onRepeat);
   const name = category?.name ?? UNCATEGORISED_NAME;
-  const detail = expense.note.trim() || methodLabel(expense.method);
-  const { ink } = colorVars(category?.color ?? "slate");
+  const note = expense.note.trim();
+  const Icon = categoryIcon(category?.icon ?? "tag");
+  const { ink, soft } = colorVars(category?.color ?? "slate");
+  /* The note is the specific thing, so it leads; the category only repeats itself
+   * underneath when the note has already taken the headline. */
+  const detail = [note && name, methodLabel(expense.method), timeOf(expense)].filter(Boolean);
 
   return (
-    <button type="button" className={styles.row} style={{ "--row-ink": ink } as CSSProperties} onClick={onOpen} {...longPress}>
-      <CategoryBadge icon={category?.icon ?? "tag"} color={category?.color ?? "slate"} />
+    <button
+      type="button"
+      className={styles.row}
+      style={{ "--row-ink": ink, "--row-soft": soft } as CSSProperties}
+      onClick={onOpen}
+      {...longPress}
+    >
+      <span className={styles.rowIcon} aria-hidden><Icon /></span>
       <span className={styles.rowText}>
-        <span className={styles.rowTitle}>{name}</span>
-        <span className={styles.rowDetail}>{detail}</span>
+        <span className={styles.rowTitle}>{note || name}</span>
+        <span className={styles.rowDetail}>
+          {detail.map((part, i) => (
+            <span key={part} className={i === 0 && note ? styles.rowCategory : undefined}>{part}</span>
+          ))}
+        </span>
       </span>
       <span className={styles.rowAmount}>{formatMoney(expense.amount)}</span>
     </button>

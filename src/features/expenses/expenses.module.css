@@ -1,11 +1,10 @@
 .row {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
   width: 100%;
-  min-height: 58px;
-  padding: 10px 14px 10px 17px;
+  min-height: 62px;
+  padding: 11px 14px;
   border: 0;
   border-top: 1px solid var(--line-soft);
   background: none;
@@ -20,21 +19,23 @@
   border-top: 0;
 }
 
-/* The category's colour down the edge, so a list of rows reads as more than one block. */
-.row::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 6px;
-  bottom: 6px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--row-ink);
-  opacity: 0.85;
-}
-
 .row:active {
   background: var(--surface-hover);
+}
+
+/* A rounded square in the category's own colour — the colour lives here rather than in a
+ * stripe down the edge. */
+.rowIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: var(--row-soft);
+  color: var(--row-ink);
+  font-size: 17px;
 }
 
 .rowText {
@@ -42,25 +43,43 @@
   flex-direction: column;
   flex: 1;
   min-width: 0;
-  line-height: 1.3;
+  gap: 2px;
+  line-height: 1.25;
 }
 
 .rowTitle {
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 600;
-}
-
-.rowDetail {
-  font-size: 12.5px;
-  color: var(--ink-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* The parts are separated by a dot drawn between them, so no separator is left dangling
+ * when a row has no time or no note. */
+.rowDetail {
+  display: flex;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.rowDetail > span + span::before {
+  content: "·";
+  margin: 0 5px;
+  opacity: 0.6;
+}
+
+.rowCategory {
+  font-weight: 600;
+  color: var(--row-ink);
+}
+
 .rowAmount {
   flex: none;
-  font-size: 15.5px;
+  font-size: 16px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }

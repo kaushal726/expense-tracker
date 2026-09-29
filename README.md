@@ -22,7 +22,9 @@ Adding an expense has to be nearly effortless, or it doesn't get done:
   ones you reach for stay in front. Adding one is a tap and a name.
 - A date switcher sits at the top: arrows step a day at a time, and the pill opens the
   phone's date picker, so a forgotten expense from Friday is a tap away.
-- Press and hold any entry to repeat it on today.
+- Press and hold any entry to repeat it on today. An entry leads with its note — the
+  specific thing — and carries its category, how it was paid and the time underneath, so
+  a run of entries in one category still reads as separate entries.
 
 ## Project layout
 
