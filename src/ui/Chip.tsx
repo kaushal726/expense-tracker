@@ -27,7 +27,7 @@ export function Chip({ selected, onClick, children, icon, tone, role = "button",
   return (
     <button
       type="button"
-      className={cx(styles.chip, selected && styles.selected, outline && styles.outline)}
+      className={cx(styles.chip, tone && styles.toned, selected && styles.selected, outline && styles.outline)}
       style={tone ? ({ "--chip-ink": tone.ink, "--chip-soft": tone.soft } as CSSProperties) : undefined}
       aria-label={label}
       onClick={onClick}

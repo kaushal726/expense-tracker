@@ -124,11 +124,14 @@
 .toneDue { background: var(--due-bg); }
 .toneDue .statValue { color: var(--due); }
 .toneAccent { background: var(--accent-bg); }
+.toneNeutral { background: var(--neutral-bg); }
 .toneAccent .statValue { color: var(--accent-ink); }
+.toneNeutral .statValue { color: var(--neutral); }
 .tonePrimary .statLabel,
 .tonePaid .statLabel,
 .toneDue .statLabel,
-.toneAccent .statLabel { color: var(--ink-2); }
+.toneAccent .statLabel,
+.toneNeutral .statLabel { color: var(--ink-2); }
 
 /* Section heading */
 .fieldLabel {

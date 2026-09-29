@@ -46,7 +46,7 @@ export function TrendChart({ points, average = 0, label, emptyText }: TrendChart
             <button
               key={point.key}
               type="button"
-              className={cx(styles.bar, point.key === selectedKey && styles.barSelected)}
+              className={cx(styles.bar, average > 0 && point.amount > average && styles.barOver, point.key === selectedKey && styles.barSelected)}
               style={{ "--height": `${point.amount ? Math.max(MIN_BAR_PERCENT, (point.amount / max) * 100) : 0}%` } as CSSProperties}
               aria-label={`${point.label}: ${formatMoney(point.amount)}`}
               aria-pressed={point.key === selectedKey}

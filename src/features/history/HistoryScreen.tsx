@@ -4,6 +4,7 @@ import { FiInbox, FiSearch } from "react-icons/fi";
 import { setQuery, type Route } from "../../app/router";
 import { duplicateExpense, deleteExpense } from "../../data/actions";
 import { groupByDay } from "../../data/grouping";
+import { heatLevel } from "../../data/heatLevel";
 import { inRange, summarise, totalOf, UNCATEGORISED_FILTER, UNCATEGORISED_NAME } from "../../data/insights";
 import { methodLabel } from "../../data/methods";
 import { PERIOD_PRESETS } from "../../data/periods";
@@ -86,8 +87,8 @@ export function HistoryScreen({ route }: { route: Route }) {
           columns={3}
           stats={[
             { label: "Spent", value: formatMoneyShort(total), tone: "primary" },
-            { label: "Entries", value: String(filtered.length) },
-            { label: "A day", value: formatMoneyShort(summary.dailyAverage) },
+            { label: "Entries", value: String(filtered.length), tone: "neutral" },
+            { label: "A day", value: formatMoneyShort(summary.dailyAverage), tone: "accent" },
           ]}
         />
       </div>
@@ -113,7 +114,12 @@ export function HistoryScreen({ route }: { route: Route }) {
                   <span className={styles.dayLabel}>{formatDayLabel(group.date)}</span>
                   <span className={styles.dayTotal}>{formatMoney(group.total)}</span>
                 </div>
-                <div className={styles.dayBar} style={{ "--share": `${(group.total / biggestDay) * 100}%` } as CSSProperties} aria-hidden />
+                <div
+                  className={styles.dayBar}
+                  data-level={heatLevel(group.total, biggestDay)}
+                  style={{ "--share": `${(group.total / biggestDay) * 100}%` } as CSSProperties}
+                  aria-hidden
+                />
                 <div className={styles.dayMeta}>
                   <span>{plural(group.expenses.length, "expense")}</span>
                   <span>{formatMoney(group.runningTotal)} to date</span>

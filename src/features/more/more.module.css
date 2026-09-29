@@ -43,11 +43,6 @@
 .statusDot[data-state="offline"] { background: var(--warn); }
 .statusDot[data-state="error"] { background: var(--due); }
 
-.danger {
-  border-color: var(--due-border);
-  background: var(--due-bg);
-}
-
 /* Keeps the credit line at the foot of the screen, not floating under the content. */
 .screen {
   display: flex;

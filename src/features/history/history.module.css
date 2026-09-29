@@ -61,6 +61,12 @@
   background: var(--primary);
 }
 
+/* The same green-to-red scale the calendar uses, so a heavy day looks heavy in both. */
+.dayBar[data-level="1"]::after { background: var(--heat-1-ink); }
+.dayBar[data-level="2"]::after { background: var(--heat-2-ink); }
+.dayBar[data-level="3"]::after { background: var(--heat-3-ink); }
+.dayBar[data-level="4"]::after { background: var(--due); }
+
 .dayMeta {
   display: flex;
   justify-content: space-between;

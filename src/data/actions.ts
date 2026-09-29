@@ -3,7 +3,6 @@ import { round2 } from "../lib/format";
 import { uid } from "../lib/ids";
 import { categoriesInOrder, moveCategory, nextSortOrder, type MoveDirection } from "./categoryOrder";
 import { removeById, upsertById } from "./listOps";
-import { emptyDB } from "./seed";
 import { settingsOf } from "./settings";
 import { commit } from "./store";
 import { APP_SETTINGS_ID, type AppSettings, type Category, type DB, type Expense } from "./types";
@@ -98,8 +97,4 @@ export function saveSettings(patch: SettingsPatch): void {
 /** Restore: replaces everything, but keeps the current settings if the backup has none. */
 export function replaceAllData(data: DB): void {
   commit((db) => ({ ...data, settings: data.settings.length ? data.settings : db.settings }));
-}
-
-export function eraseAllData(): void {
-  commit(() => emptyDB());
 }

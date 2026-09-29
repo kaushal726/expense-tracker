@@ -34,7 +34,7 @@ export function Panel({ children, padded, className }: { children: ReactNode; pa
   return <div className={cx(styles.panel, padded && styles.padded, className)}>{children}</div>;
 }
 
-export type StatTone = "primary" | "paid" | "due" | "accent";
+export type StatTone = "primary" | "paid" | "due" | "accent" | "neutral";
 
 export interface Stat {
   label: string;
@@ -44,6 +44,7 @@ export interface Stat {
 }
 
 const TONE_CLASS: Record<StatTone, string> = {
+  neutral: styles.toneNeutral,
   primary: styles.tonePrimary,
   paid: styles.tonePaid,
   due: styles.toneDue,

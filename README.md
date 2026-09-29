@@ -78,6 +78,10 @@ npm run build       # production build in dist/
   whatever period is selected.
 - **Projection** is the current daily rate carried to the end of the period — shown only
   while the period is still running.
+- **Colour carries meaning, not decoration.** One spending scale — green for a light day
+  through to red for a heavy one — runs the calendar, the History day bars and the budget
+  bar, so a heavy day looks heavy wherever you meet it. Category chips and expense rows
+  wear their own category's colour. Everything else stays grey on purpose.
 - **A budget** turns the month into a running check: what a day allows, what you are
   actually spending a day, what is safe for the days left, and how far ahead of an even
   pace you already are. Past 90% of the budget the card warns; past 150% the warning

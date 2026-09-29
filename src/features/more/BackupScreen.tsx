@@ -1,14 +1,14 @@
 import { useRef } from "react";
 import { FiDownload, FiUpload } from "react-icons/fi";
 import { href } from "../../app/router";
-import { eraseAllData, replaceAllData } from "../../data/actions";
+import { replaceAllData } from "../../data/actions";
 import { createBackup, InvalidBackupError, parseBackup } from "../../data/backup";
 import { getDB } from "../../data/store";
 import { todayISO } from "../../lib/dates";
 import { downloadBlob } from "../../lib/files";
 import { Button } from "../../ui/Button";
 import { useConfirm } from "../../ui/Confirm";
-import { PageHeader, Panel, SectionTitle } from "../../ui/layout";
+import { PageHeader, Panel } from "../../ui/layout";
 import { useToast } from "../../ui/Toast";
 import styles from "./more.module.css";
 
@@ -38,18 +38,6 @@ export function BackupScreen() {
     }
   };
 
-  const erase = async () => {
-    const ok = await confirm({
-      title: "Erase everything?",
-      message: `Every expense and category goes. ${SHEET_NOTE} Save a backup first.`,
-      confirmLabel: "Erase everything",
-      danger: true,
-    });
-    if (!ok) return;
-    eraseAllData();
-    toast("All data erased");
-  };
-
   return (
     <>
       <PageHeader back={BACK} title="Backup & restore" />
@@ -73,12 +61,6 @@ export function BackupScreen() {
             if (file) void restore(file);
           }}
         />
-      </Panel>
-
-      <SectionTitle>Danger zone</SectionTitle>
-      <Panel padded className={styles.danger}>
-        <p className={styles.help}>Removes everything and starts fresh. Save a backup first.</p>
-        <Button variant="danger" block onClick={erase}>Erase all data</Button>
       </Panel>
     </>
   );

@@ -65,11 +65,16 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --touch: 44px;
 
-  /* Calendar heat map, four steps from a light tint to the full accent. */
-  --heat-1: #dbe7f3;
-  --heat-2: #a9c6e2;
-  --heat-3: #4a7fb0;
-  --heat-4: #24567f;
+  /* Spending scale, shared by the calendar and the day bars in History: a light day is
+   * green, a heavy one red. Each step carries the ink that stays readable on it. */
+  --heat-1: #dcf0e2;
+  --heat-1-ink: #1f6b3d;
+  --heat-2: #fbeec6;
+  --heat-2-ink: #87621a;
+  --heat-3: #f8d3ab;
+  --heat-3-ink: #9a5518;
+  --heat-4: #e08070;
+  --heat-4-ink: #ffffff;
 
   /* Category colours — a calm, evenly-weighted set. Each is picked in More → Categories
    * and read through src/data/categoryColors.ts. */
@@ -145,10 +150,14 @@
   --shadow-card: 0 4px 14px rgba(0, 0, 0, 0.4);
   --shadow-raised: 0 1px 2px rgba(0, 0, 0, 0.4);
 
-  --heat-1: #22303f;
-  --heat-2: #33536f;
-  --heat-3: #5c8fbd;
-  --heat-4: #8fbde6;
+  --heat-1: #16301f;
+  --heat-1-ink: #7fd4a0;
+  --heat-2: #3a2f16;
+  --heat-2-ink: #e0bb6d;
+  --heat-3: #553218;
+  --heat-3-ink: #f0ab72;
+  --heat-4: #8a3529;
+  --heat-4-ink: #ffd9d2;
 
   --cat-blue: #6fb0f0;
   --cat-blue-soft: #16273a;
