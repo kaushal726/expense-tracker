@@ -135,6 +135,17 @@ URLs are normal paths (`/expense-tracker/history?category=…`), so any page can
 shared. GitHub Pages serves `404.html` (a copy of the app) for paths it doesn't know, and
 installed apps are served by the service worker, offline too.
 
+## The status bar on an installed app
+
+`index.html` carries one `theme-color` meta per colour scheme, so an installed app paints
+the right status bar before any script runs; `src/app/theme.ts` re-points their `media`
+when a theme is picked by hand. A manifest can't follow the phone's theme, so
+`background_color` and `theme_color` use the icon's own dark square — that is what the
+splash and the launch bar show, and it beats flashing white on a dark phone.
+
+Android caches the manifest at install time, so those two only change after the app is
+removed and installed again.
+
 ## The icon
 
 `public/icons/icon.svg` is the source. The PNGs were rendered from it with

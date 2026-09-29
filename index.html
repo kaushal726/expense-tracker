@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>%APP_NAME%</title>
     <meta name="description" content="%APP_DESCRIPTION%" />
-    <meta name="theme-color" content="%THEME_COLOR%" />
+    <!-- One per scheme, so an installed app paints the right status bar before any script
+         runs. src/app/theme.ts re-points their `media` when a theme is chosen by hand. -->
+    <meta name="theme-color" content="%THEME_COLOR%" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="%THEME_COLOR_DARK%" media="(prefers-color-scheme: dark)" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
     <link rel="icon" type="image/png" href="/icons/icon-192.png" />
@@ -22,9 +25,11 @@
       (function () {
         try {
           var saved = localStorage.getItem("spendly_theme");
-          var dark = saved === "dark" || (saved !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
-          document.documentElement.dataset.theme = dark ? "dark" : "light";
-          if (dark) document.querySelector('meta[name="theme-color"]').content = "%THEME_COLOR_DARK%";
+          if (saved !== "dark" && saved !== "light") return;   // following the phone: the metas above are already right
+          document.documentElement.dataset.theme = saved;
+          var metas = document.querySelectorAll('meta[name="theme-color"]');
+          metas[0].media = saved === "light" ? "all" : "not all";
+          metas[1].media = saved === "dark" ? "all" : "not all";
         } catch (e) {}
       })();
     </script>

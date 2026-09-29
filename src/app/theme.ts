@@ -5,7 +5,6 @@
  * the phone's setting and with what the user chooses in More.
  */
 import { useSyncExternalStore } from "react";
-import { THEME_COLOR, THEME_COLOR_DARK } from "./brand";
 
 export type ThemeChoice = "system" | "light" | "dark";
 
@@ -33,10 +32,24 @@ export function resolveTheme(pick: ThemeChoice = choice): "light" | "dark" {
   return pick === "system" ? (prefersDark() ? "dark" : "light") : pick;
 }
 
+/* index.html carries one theme-color meta per scheme. Following the phone means leaving
+ * their media queries alone; a theme chosen by hand pins one on and the other off, which
+ * is what an installed app's status bar reads. */
+function applyStatusBar(): void {
+  const [light, dark] = document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]');
+  if (!light || !dark) return;
+  if (choice === "system") {
+    light.media = "(prefers-color-scheme: light)";
+    dark.media = "(prefers-color-scheme: dark)";
+    return;
+  }
+  light.media = choice === "light" ? "all" : "not all";
+  dark.media = choice === "dark" ? "all" : "not all";
+}
+
 function apply(): void {
-  const resolved = resolveTheme();
-  document.documentElement.dataset.theme = resolved;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", resolved === "dark" ? THEME_COLOR_DARK : THEME_COLOR);
+  document.documentElement.dataset.theme = resolveTheme();
+  applyStatusBar();
 }
 
 export function getThemeChoice(): ThemeChoice {
