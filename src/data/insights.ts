@@ -113,6 +113,22 @@ export function byCategory(expenses: Expense[], categories: Category[]): Categor
     .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name));
 }
 
+export interface CategoryMovement extends CategorySlice {
+  /** What this category cost in the period before. */
+  previous: number;
+  /** Positive means it grew — the categories worth looking at first. */
+  change: number;
+}
+
+/** Pairs this period's slices with the same categories in the period before. */
+export function withPrevious(slices: CategorySlice[], previousSlices: CategorySlice[]): CategoryMovement[] {
+  const before = new Map(previousSlices.map((s) => [s.categoryId, s.amount]));
+  return slices.map((slice) => {
+    const previous = before.get(slice.categoryId) ?? 0;
+    return { ...slice, previous, change: round2(slice.amount - previous) };
+  });
+}
+
 /* ---------- day by day ---------- */
 
 export interface DayPoint {

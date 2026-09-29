@@ -2,6 +2,7 @@
  * with that day's spending under it. An expense is category → amount → Save.
  */
 import { useMemo, useState } from "react";
+import { href } from "../../app/router";
 import { deleteExpense, duplicateExpense, saveExpense } from "../../data/actions";
 import { categoriesInOrder } from "../../data/categoryOrder";
 import { totalOf } from "../../data/insights";
@@ -95,15 +96,16 @@ export function AddScreen() {
       <DetailsRow method={details.method} note={details.note} onChange={(patch) => setDetails((d) => ({ ...d, ...patch }))} />
       <Button variant="primary" block className={styles.save} onClick={save}>Save expense</Button>
 
-      <div className={styles.summary}>
+      {/* The month's figures live in Insights; this is the way in from the home screen. */}
+      <a className={styles.summary} href={href("insights")} aria-label="See the month in Insights">
         <StatGrid
           columns={2}
           stats={[
             { label: "Spent today", value: formatMoney(todayTotal) },
-            { label: "Spent this month", value: formatMoney(monthSpent), tone: "primary" },
+            { label: "Spent this month", value: formatMoney(monthSpent), tone: "primary", sub: "See the month →" },
           ]}
         />
-      </div>
+      </a>
 
       <DayList
         date={details.date}

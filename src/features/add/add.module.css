@@ -217,7 +217,10 @@
 
 /* Summary and today's list, below the form */
 .summary {
+  display: block;
   margin-top: 30px;
+  color: inherit;
+  text-decoration: none;
 }
 
 .today {

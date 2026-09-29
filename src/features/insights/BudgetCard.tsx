@@ -49,7 +49,7 @@ export function BudgetCard({ status, daysLeft, lastMonthPerDay }: BudgetCardProp
           : <><b>{formatMoney(status.left)} left</b> · {formatShare(status.usedShare)} used</>}
       </p>
 
-      <dl className={styles.budgetFacts}>
+      <dl className={styles.facts}>
         <div>
           <dt>A day, on budget</dt>
           <dd>{formatMoney(status.dailyAllowance)}</dd>

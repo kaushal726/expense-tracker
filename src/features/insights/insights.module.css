@@ -38,6 +38,51 @@
   text-align: center;
 }
 
+/* The period in one block */
+.summary {
+  margin-bottom: 4px;
+}
+
+.summaryLabel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.summaryTotal {
+  margin: 6px 0 0;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.summaryCount {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+/* Whether a category grew or shrank against the period before. */
+.movementUp,
+.movementDown {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.movementUp {
+  color: var(--due);
+}
+
+.movementDown {
+  color: var(--paid);
+}
+
 /* Budget */
 .budget {
   margin-bottom: 4px;
@@ -137,7 +182,7 @@
 }
 
 /* The four numbers a budget is actually for. */
-.budgetFacts {
+.facts {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
@@ -146,17 +191,17 @@
   border-top: 1px solid var(--line);
 }
 
-.budgetFacts > div {
+.facts > div {
   min-width: 0;
 }
 
-.budgetFacts dt {
+.facts dt {
   font-size: 12px;
   font-weight: 600;
   color: var(--ink-3);
 }
 
-.budgetFacts dd {
+.facts dd {
   margin: 2px 0 0;
   font-size: 15px;
   font-weight: 700;

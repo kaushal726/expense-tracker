@@ -8,7 +8,7 @@ import { addDays } from "../lib/dates";
 import { round2 } from "../lib/format";
 import {
   biggestExpenses, budgetStatus, busiestDays, byCategory, byDay, changeVs, granularityFor,
-  inRange, monthSeries, summarise, totalOf, trend, UNCATEGORISED_ID, yearSeries, yearsOfHistory,
+  inRange, monthSeries, summarise, totalOf, trend, UNCATEGORISED_ID, withPrevious, yearSeries, yearsOfHistory,
 } from "./insights";
 import { cycleContaining, daysBetween, recentCycles, recentYears, shiftCycle, yearContaining } from "./months";
 import { presetRange, previousRange, type DateRange, type PeriodPreset } from "./periods";
@@ -191,5 +191,25 @@ describe("insights invariants", () => {
     expect(change.percent === null).toBe(previous === 0);
     // The percentage is rounded to two places, so it reproduces the total to within that.
     if (previous) expect(Math.abs(previous * (1 + change.percent! / 100) - current)).toBeLessThanOrEqual(previous * 0.0001 + CENT);
+  });
+});
+
+describe("category movement", () => {
+  const slice = (categoryId: string, amount: number) =>
+    ({ categoryId, name: categoryId, icon: "tag", color: "slate", amount, count: 1, share: 0 });
+
+  it("pairs a category with what it cost before", () => {
+    const moved = withPrevious([slice("food", 500), slice("travel", 100)], [slice("food", 300), slice("travel", 400)]);
+    expect(moved.map((m) => [m.categoryId, m.previous, m.change])).toEqual([["food", 300, 200], ["travel", 400, -300]]);
+  });
+
+  it("treats a category that is new this period as all growth", () => {
+    expect(withPrevious([slice("petrol", 2000)], [])).toMatchObject([{ previous: 0, change: 2000 }]);
+  });
+
+  it("keeps the slice it was given untouched", () => {
+    const original = slice("food", 500);
+    const [moved] = withPrevious([original], [slice("food", 500)]);
+    expect(moved).toMatchObject({ ...original, previous: 500, change: 0 });
   });
 });
