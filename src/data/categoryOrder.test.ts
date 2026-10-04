@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CATEGORY_COLORS, nextCategoryColor } from "./categoryColors";
 import { categoriesInOrder, moveCategory, nextSortOrder } from "./categoryOrder";
+import { heatBarColor, heatLevel } from "./heatLevel";
 import type { Category } from "./types";
 
 const category = (id: string, sortOrder: number, createdAt = 0): Category =>
@@ -62,5 +63,21 @@ describe("colour for a new category", () => {
 
   it("starts at the top of the palette for the first category", () => {
     expect(nextCategoryColor([])).toBe(CATEGORY_COLORS[0]);
+  });
+});
+
+describe("heat scale", () => {
+  it("steps from nothing through to the heaviest", () => {
+    expect([0, 1, 250, 500, 750, 1000].map((n) => heatLevel(n, 1000))).toEqual([0, 1, 1, 2, 3, 4]);
+  });
+
+  it("treats a day with nothing on it, and an empty period, as level zero", () => {
+    expect(heatLevel(0, 1000)).toBe(0);
+    expect(heatLevel(500, 0)).toBe(0);
+  });
+
+  it("never hands a bar the level-zero colour, which has none", () => {
+    expect(heatBarColor(0, 1000)).toBe("var(--heat-bar-1)");
+    expect(heatBarColor(1000, 1000)).toBe("var(--heat-bar-4)");
   });
 });

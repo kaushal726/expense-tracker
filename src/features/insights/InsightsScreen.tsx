@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { FiPieChart, FiTarget } from "react-icons/fi";
 import { href, type Route } from "../../app/router";
 import { colorVars } from "../../data/categoryColors";
+import { heatBarColor } from "../../data/heatLevel";
 import {
   biggestExpenses, budgetStatus, busiestDays, byCategory, byDay, byMethod, byWeekday,
   cumulativeSeries, granularityFor, inRange, meanOfUsed, monthSeries, safeToSpend, summarise,
@@ -17,7 +18,7 @@ import { formatDate, todayISO } from "../../lib/dates";
 import { formatMoney, formatMoneyShort, formatShare, plural, round2 } from "../../lib/format";
 import { BarList, type BarItem } from "../../ui/BarList";
 import { EmptyState } from "../../ui/feedback";
-import { ListGroup, ListRow, PageHeader, SectionTitle } from "../../ui/layout";
+import { PageHeader, SectionTitle } from "../../ui/layout";
 import { PeriodChips } from "../period/PeriodChips";
 import { usePeriodFilter } from "../period/usePeriodFilter";
 import { BudgetCard } from "./BudgetCard";
@@ -130,7 +131,31 @@ export function InsightsScreen({ route }: { route: Route }) {
   }));
 
   const categoryNames = new Map(db.categories.map((c) => [c.id, c.name]));
+  const categoryColours = new Map(db.categories.map((c) => [c.id, c.color]));
   const top = biggestExpenses(expenses, TOP_LIST_LIMIT);
+
+  /** Both top-fives link to the day they happened on, which is where the detail is. */
+  const dayHref = (date: string) => href("history", { period: "custom", from: date, to: date });
+
+  const biggestBars: BarItem[] = top.map((expense) => ({
+    key: expense.id,
+    label: expense.note.trim() || categoryNames.get(expense.categoryId) || UNCATEGORISED_NAME,
+    value: expense.amount,
+    color: colorVars(categoryColours.get(expense.categoryId) ?? "slate").ink,
+    display: `${formatMoney(expense.amount)} · ${formatDate(expense.date, { day: "numeric", month: "short" })}`,
+    href: dayHref(expense.date),
+  }));
+
+  const busiestPeak = Math.max(1, ...busiest.map((d) => d.amount));
+  const busiestBars: BarItem[] = busiest.map((day) => ({
+    key: day.date,
+    label: formatDate(day.date, { weekday: "short", day: "numeric", month: "short" }),
+    value: day.amount,
+    // The calendar's own scale, so the heaviest days look heavy here too.
+    color: heatBarColor(day.amount, busiestPeak),
+    display: `${formatMoney(day.amount)} · ${plural(day.count, "expense")}`,
+    href: dayHref(day.date),
+  }));
   const budget = monthlyBudget > 0 ? budgetStatus(summary.total, monthlyBudget, summary.daysTotal, summary.daysElapsed) : null;
   const allowances = budget ? safeToSpend(slices, db.categories, budget.left, summary.daysLeft) : [];
   /* Only up to today: a flat line across the days still to come would read as "I stopped
@@ -219,32 +244,14 @@ export function InsightsScreen({ route }: { route: Route }) {
       {top.length > 0 && (
         <>
           <SectionTitle>Biggest expenses</SectionTitle>
-          <ListGroup>
-            {top.map((expense) => (
-              <ListRow
-                key={expense.id}
-                title={categoryNames.get(expense.categoryId) ?? UNCATEGORISED_NAME}
-                subtitle={`${formatDate(expense.date)}${expense.note ? ` · ${expense.note}` : ""}`}
-                right={<span className={styles.rowAmount}>{formatMoney(expense.amount)}</span>}
-              />
-            ))}
-          </ListGroup>
+          <BarList items={biggestBars} />
         </>
       )}
 
       {granularity === "day" && busiest.length > 0 && (
         <>
           <SectionTitle>Busiest days</SectionTitle>
-          <ListGroup>
-            {busiest.map((day) => (
-              <ListRow
-                key={day.date}
-                title={formatDate(day.date, { weekday: "short", day: "numeric", month: "short" })}
-                subtitle={plural(day.count, "expense")}
-                right={<span className={styles.rowAmount}>{formatMoney(day.amount)}</span>}
-              />
-            ))}
-          </ListGroup>
+          <BarList items={busiestBars} />
         </>
       )}
 

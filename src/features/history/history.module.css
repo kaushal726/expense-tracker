@@ -62,10 +62,10 @@
 }
 
 /* The same green-to-red scale the calendar uses, so a heavy day looks heavy in both. */
-.dayBar[data-level="1"]::after { background: var(--heat-1-ink); }
-.dayBar[data-level="2"]::after { background: var(--heat-2-ink); }
-.dayBar[data-level="3"]::after { background: var(--heat-3-ink); }
-.dayBar[data-level="4"]::after { background: var(--due); }
+.dayBar[data-level="1"]::after { background: var(--heat-bar-1); }
+.dayBar[data-level="2"]::after { background: var(--heat-bar-2); }
+.dayBar[data-level="3"]::after { background: var(--heat-bar-3); }
+.dayBar[data-level="4"]::after { background: var(--heat-bar-4); }
 
 .dayMeta {
   display: flex;

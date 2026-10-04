@@ -76,6 +76,13 @@
   --heat-4: #e08070;
   --heat-4-ink: #ffffff;
 
+  /* The same four steps as a bar rather than a filled cell: these follow the theme on
+   * their own, and are the run the budget bar's gradient passes through. */
+  --heat-bar-1: var(--paid);
+  --heat-bar-2: var(--accent);
+  --heat-bar-3: var(--warn);
+  --heat-bar-4: var(--due);
+
   /* Category colours — a calm, evenly-weighted set. Each is picked in More → Categories
    * and read through src/data/categoryColors.ts. */
   --cat-blue: #2f7ed8;
