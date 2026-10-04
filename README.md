@@ -78,6 +78,12 @@ npm run build       # production build in dist/
 - **The trend chart zooms itself**: day by day up to ~3 months, month by month up to ~3
   years, year by year beyond that. "Last 12 months" and "Year on year" are always shown,
   whatever period is selected.
+- **Today's limit** is what is *left* of the budget spread over the days that are left,
+  today included — not the budget spread evenly over the whole month. Overspending on
+  Monday tightens Tuesday; an easy week loosens the rest. The limit holds still through
+  the day, so spending eats into what is left of it rather than moving the line
+  underfoot. It sits under Save on the Add screen and at the top of History, and every
+  day bar in History is drawn against it, so a full bar means that day used up a day.
 - **Projection** is the current daily rate carried to the end of the period — shown only
   while the period is still running.
 - **Colour carries meaning, not decoration.** One spending scale — green for a light day

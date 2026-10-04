@@ -1,9 +1,9 @@
-import type { CSSProperties } from "react";
 import { FiAlertTriangle } from "react-icons/fi";
 import type { BudgetStatus } from "../../data/insights";
 import { cx } from "../../lib/cx";
 import { formatMoney, formatShare, plural } from "../../lib/format";
 import { Panel } from "../../ui/layout";
+import { MeterBar } from "../../ui/MeterBar";
 import styles from "./insights.module.css";
 
 interface BudgetCardProps {
@@ -22,7 +22,6 @@ const TONE_CLASS: Record<BudgetStatus["severity"], string | false> = {
 
 /** Why a budget is worth setting: what a day allows, and whether today is already past it. */
 export function BudgetCard({ status, daysLeft, lastMonthPerDay }: BudgetCardProps) {
-  const filled = Math.min(100, status.usedShare);
   const runningHot = status.aheadOfPace > 0;
 
   return (
@@ -40,9 +39,7 @@ export function BudgetCard({ status, daysLeft, lastMonthPerDay }: BudgetCardProp
         <span className={styles.budgetSpent}>{formatMoney(status.spent)}</span>
         <span className={styles.budgetOf}>of {formatMoney(status.budget)}</span>
       </div>
-      <div className={styles.budgetTrack}>
-        <div className={styles.budgetFill} style={{ "--filled": `${filled}%` } as CSSProperties} />
-      </div>
+      <MeterBar share={status.usedShare} label="Budget used" />
       <p className={styles.budgetLine}>
         {status.overspent
           ? <><b>{formatMoney(-status.left)} over</b> · nothing left for the {plural(daysLeft, "day")} to go</>

@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { href } from "../../app/router";
 import { deleteExpense, duplicateExpense, saveExpense } from "../../data/actions";
 import { categoriesInOrder } from "../../data/categoryOrder";
+import { dailyAllowanceOf } from "../../data/dailyAllowance";
 import { totalOf } from "../../data/insights";
 import { DEFAULT_METHOD } from "../../data/methods";
 import { cycleContaining } from "../../data/months";
@@ -14,7 +15,7 @@ import type { Expense } from "../../data/types";
 import { todayISO } from "../../lib/dates";
 import { formatMoney } from "../../lib/format";
 import { Button } from "../../ui/Button";
-import { FieldLabel, StatGrid } from "../../ui/layout";
+import { FieldLabel } from "../../ui/layout";
 import { useToast } from "../../ui/Toast";
 import { CategoryChips } from "../categories/CategoryChips";
 import { CategoryFormSheet } from "../categories/CategoryFormSheet";
@@ -23,6 +24,7 @@ import { EMPTY_PAD, padDisplay, padExpression, padValue, pressPad, type PadKey }
 import { DateSwitcher } from "./DateSwitcher";
 import { DetailsRow, type ExpenseDetails } from "./DetailsRow";
 import { NumberPad } from "./NumberPad";
+import { TodayBudget } from "./TodayBudget";
 import { DayList } from "./DayList";
 import styles from "./add.module.css";
 
@@ -42,7 +44,7 @@ export function AddScreen() {
 
   const categories = useMemo(() => categoriesInOrder(db.categories), [db.categories]);
   const categoriesById = useMemo(() => new Map(db.categories.map((c) => [c.id, c])), [db.categories]);
-  const todayTotal = useMemo(() => totalOf(db.expenses.filter((e) => e.date === today)), [db.expenses, today]);
+  const allowance = useMemo(() => dailyAllowanceOf(db, today), [db, today]);
   /* The list follows the date on the switcher, so an expense backdated to Friday is
    * visible the moment it is saved. */
   const dayExpenses = useMemo(
@@ -96,16 +98,8 @@ export function AddScreen() {
       <DetailsRow method={details.method} note={details.note} onChange={(patch) => setDetails((d) => ({ ...d, ...patch }))} />
       <Button variant="primary" block className={styles.save} onClick={save}>Save expense</Button>
 
-      {/* The month's figures live in Insights; this is the way in from the home screen. */}
-      <a className={styles.summary} href={href("insights")} aria-label="See the month in Insights">
-        <StatGrid
-          columns={2}
-          stats={[
-            { label: "Spent today", value: formatMoney(todayTotal) },
-            { label: "Spent this month", value: formatMoney(monthSpent), tone: "primary", sub: "See the month →" },
-          ]}
-        />
-      </a>
+      {/* What today allows, read on the way out of every entry. */}
+      <TodayBudget allowance={allowance} monthSpent={monthSpent} href={href("insights")} />
 
       <DayList
         date={details.date}

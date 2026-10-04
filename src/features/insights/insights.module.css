@@ -141,24 +141,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-.budgetTrack {
-  height: 10px;
-  border-radius: 999px;
-  background: var(--track);
-  overflow: hidden;
-}
-
-.budgetFill {
-  width: 100%;
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--paid) 0%, var(--accent) 55%, var(--warn) 78%, var(--due) 100%);
-  /* The gradient always spans the whole track, so a colour means the same share of the
-   * budget however full the bar is; the clip is what moves. */
-  clip-path: inset(0 calc(100% - var(--filled)) 0 0 round 999px);
-  transition: clip-path 0.25s ease;
-}
-
 .budgetLine {
   margin: 10px 0 0;
   font-size: 13.5px;

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { FiInbox, FiSearch } from "react-icons/fi";
 import { setQuery, type Route } from "../../app/router";
 import { duplicateExpense, deleteExpense } from "../../data/actions";
+import { dailyAllowanceOf } from "../../data/dailyAllowance";
 import { groupByDay } from "../../data/grouping";
 import { heatLevel } from "../../data/heatLevel";
 import { inRange, summarise, totalOf, UNCATEGORISED_FILTER, UNCATEGORISED_NAME } from "../../data/insights";
@@ -11,7 +12,7 @@ import { PERIOD_PRESETS } from "../../data/periods";
 import { settingsOf } from "../../data/settings";
 import { useDB } from "../../data/store";
 import type { Category, Expense } from "../../data/types";
-import { formatDayLabel, todayISO } from "../../lib/dates";
+import { formatDayLabel, isWithin, todayISO } from "../../lib/dates";
 import { formatMoney, formatMoneyShort, plural } from "../../lib/format";
 import { EmptyState } from "../../ui/feedback";
 import type { CSSProperties } from "react";
@@ -59,9 +60,13 @@ export function HistoryScreen({ route }: { route: Route }) {
   const groups = useMemo(() => groupByDay(filtered), [filtered]);
   const total = totalOf(filtered);
   const summary = useMemo(() => summarise(filtered, period.range, today), [filtered, period.range, today]);
-  /* Every day's bar is drawn against the biggest day, so the shape of the period reads
-   * without having to compare the numbers. */
-  const biggestDay = Math.max(1, ...groups.map((g) => g.total));
+  const allowance = useMemo(() => dailyAllowanceOf(db, today), [db, today]);
+  /* With a budget running, every day is measured against what a day currently allows, so
+   * a full bar means "that day used up a day". Without one, the biggest day on screen is
+   * the yardstick and the bars only show the shape of the period. */
+  const showsToday = isWithin(today, period.range.from, period.range.to);
+  const againstLimit = allowance.limit > 0 && showsToday;
+  const barBasis = againstLimit ? allowance.limit : Math.max(1, ...groups.map((g) => g.total));
 
   const categoryOptions: Option[] = useMemo(() => {
     const orphans = inPeriod.filter((e) => !categoriesById.has(e.categoryId)).length;
@@ -92,6 +97,16 @@ export function HistoryScreen({ route }: { route: Route }) {
           ]}
         />
       </div>
+      {againstLimit && (
+        <p className={styles.limit}>
+          <span>Daily limit <b>{formatMoney(allowance.limit)}</b></span>
+          <span className={allowance.overspent ? styles.limitOver : undefined}>
+            {allowance.overspent
+              ? `${formatMoney(-allowance.left)} over today`
+              : `${formatMoney(allowance.left)} left today`}
+          </span>
+        </p>
+      )}
       <FilterBar
         className={styles.filters}
         search={{ value: search, onChange: (q) => setQuery(route, { q: q || null }), placeholder: "Search notes, categories, amounts" }}
@@ -116,8 +131,8 @@ export function HistoryScreen({ route }: { route: Route }) {
                 </div>
                 <div
                   className={styles.dayBar}
-                  data-level={heatLevel(group.total, biggestDay)}
-                  style={{ "--share": `${(group.total / biggestDay) * 100}%` } as CSSProperties}
+                  data-level={heatLevel(Math.min(group.total, barBasis), barBasis)}
+                  style={{ "--share": `${Math.min(100, (group.total / barBasis) * 100)}%` } as CSSProperties}
                   aria-hidden
                 />
                 <div className={styles.dayMeta}>

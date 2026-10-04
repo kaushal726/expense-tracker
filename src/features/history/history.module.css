@@ -2,6 +2,30 @@
   margin-bottom: 16px;
 }
 
+/* What a day currently allows — the yardstick the day bars below are drawn against. */
+.limit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-bg);
+  font-size: 13px;
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.limit b {
+  font-weight: 700;
+}
+
+.limitOver {
+  font-weight: 700;
+  color: var(--due);
+}
+
 .filters {
   margin-bottom: 18px;
 }

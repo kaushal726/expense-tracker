@@ -215,12 +215,80 @@
   cursor: pointer;
 }
 
-/* Summary and today's list, below the form */
-.summary {
-  display: block;
-  margin-top: 30px;
+/* What today allows, below the form */
+.todayBudget {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 22px;
+  padding: 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
   color: inherit;
   text-decoration: none;
+}
+
+.todayBudgetTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.todayBudgetLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.todayBudgetLimit {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.todayBudgetLine {
+  font-size: 13px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.todayBudgetLine b {
+  color: var(--ink);
+}
+
+.todayBudgetOver b {
+  color: var(--due);
+}
+
+.todayBudgetHint {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.todayBudgetFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 12.5px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.todayBudgetFoot b {
+  color: var(--ink-2);
+}
+
+.todayBudgetFoot svg {
+  flex: none;
+  font-size: 15px;
 }
 
 .today {
