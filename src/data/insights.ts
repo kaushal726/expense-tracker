@@ -5,7 +5,7 @@
  * (an expense whose category was deleted lands in the "Uncategorised" slice).
  * src/data/insightsInvariants.test.ts checks that over generated data.
  */
-import { addDays, isWithin } from "../lib/dates";
+import { addDays, isWithin, parseISODate } from "../lib/dates";
 import { round2 } from "../lib/format";
 import { DEFAULT_CATEGORY_COLOR } from "./categoryColors";
 import { DEFAULT_CATEGORY_ICON } from "./categoryIcons";
@@ -14,7 +14,8 @@ import {
   shiftCycle, shiftYear, yearContaining, yearLabel, type Span,
 } from "./months";
 import type { DateRange } from "./periods";
-import type { Category, Expense } from "./types";
+import { SPEND_METHODS } from "./methods";
+import type { Category, Expense, SpendMethod } from "./types";
 
 export const UNCATEGORISED_ID = "";
 export const UNCATEGORISED_NAME = "Uncategorised";
@@ -171,6 +172,115 @@ export function busiestDays(points: DayPoint[], limit: number): DayPoint[] {
 
 export function biggestExpenses(expenses: Expense[], limit: number): Expense[] {
   return [...expenses].sort((a, b) => b.amount - a.amount || b.date.localeCompare(a.date)).slice(0, limit);
+}
+
+/* ---------- cumulative pace ---------- */
+
+export interface CumulativePoint {
+  date: string;
+  /** Everything spent from the start of the period up to and including this day. */
+  total: number;
+}
+
+/** The running total day by day — what a budget is actually raced against. */
+export function cumulativeSeries(points: DayPoint[]): CumulativePoint[] {
+  let running = 0;
+  return points.map((point) => {
+    running = round2(running + point.amount);
+    return { date: point.date, total: running };
+  });
+}
+
+/* ---------- by weekday ---------- */
+
+const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+export interface WeekdayPoint {
+  /** 0 is Monday, to match the calendar. */
+  weekday: number;
+  label: string;
+  amount: number;
+  count: number;
+  /** How many of this weekday the period held, so the average means something. */
+  days: number;
+  average: number;
+}
+
+/** Which day of the week the money goes on, averaged over how often that day came round. */
+export function byWeekday(points: DayPoint[]): WeekdayPoint[] {
+  const buckets = WEEKDAY_LABELS.map((label, weekday) => ({ weekday, label, amount: 0, count: 0, days: 0, average: 0 }));
+  points.forEach((point) => {
+    const bucket = buckets[(parseISODate(point.date).getDay() + 6) % 7];
+    bucket.amount += point.amount;
+    bucket.count += point.count;
+    bucket.days += 1;
+  });
+  return buckets.map((b) => ({ ...b, amount: round2(b.amount), average: b.days ? round2(b.amount / b.days) : 0 }));
+}
+
+/* ---------- by payment method ---------- */
+
+export interface MethodSlice {
+  method: SpendMethod;
+  label: string;
+  amount: number;
+  count: number;
+  share: number;
+}
+
+/** How the money left: cash, UPI or card. Methods with nothing against them drop out. */
+export function byMethod(expenses: Expense[]): MethodSlice[] {
+  const total = totalOf(expenses);
+  return SPEND_METHODS
+    .map(({ value, label }) => {
+      const mine = expenses.filter((e) => e.method === value);
+      const amount = totalOf(mine);
+      return { method: value, label, amount, count: mine.length, share: total ? round2((amount / total) * 100) : 0 };
+    })
+    .filter((slice) => slice.count > 0)
+    .sort((a, b) => b.amount - a.amount);
+}
+
+/* ---------- what is still safe to spend, per category ---------- */
+
+export interface CategoryAllowance {
+  categoryId: string;
+  name: string;
+  icon: string;
+  color: string;
+  spent: number;
+  /** What is left: the category's own budget minus its spend, or its share of what the
+   *  month's budget still allows. */
+  left: number;
+  perDay: number;
+  /** True when the figure comes from a budget set on the category itself. */
+  ownBudget: boolean;
+  overspent: boolean;
+}
+
+/**
+ * How much each category still allows. A category with its own budget is measured against
+ * it; the rest share what is left of the month's budget in the proportion they have been
+ * used, which is the honest answer to "if I carry on like this, what do I have left".
+ */
+export function safeToSpend(slices: CategorySlice[], categories: Category[], budgetLeft: number, daysLeft: number): CategoryAllowance[] {
+  const budgets = new Map(categories.map((c) => [c.id, c.monthlyBudget]));
+  const pool = Math.max(0, budgetLeft);
+  return slices.map((slice) => {
+    const own = budgets.get(slice.categoryId) ?? 0;
+    const left = own > 0 ? round2(own - slice.amount) : round2(pool * (slice.share / 100));
+    return {
+      categoryId: slice.categoryId,
+      name: slice.name,
+      icon: slice.icon,
+      color: slice.color,
+      spent: slice.amount,
+      left,
+      perDay: daysLeft > 0 ? round2(Math.max(0, left) / daysLeft) : 0,
+      ownBudget: own > 0,
+      overspent: left < 0,
+    };
+  });
 }
 
 /* ---------- the trend chart, at whatever zoom the period needs ---------- */

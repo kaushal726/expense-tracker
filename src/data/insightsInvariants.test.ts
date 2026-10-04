@@ -8,8 +8,8 @@ import { addDays } from "../lib/dates";
 import { round2 } from "../lib/format";
 import {
   biggestExpenses, budgetStatus, busiestDays, byCategory, byDay, changeVs, granularityFor,
-  inRange, meanOfUsed, monthSeries, summarise, totalOf, trend, trimLeadingEmpty, UNCATEGORISED_ID,
-  withPrevious, yearSeries, yearsOfHistory,
+  byMethod, byWeekday, cumulativeSeries, inRange, meanOfUsed, monthSeries, safeToSpend, summarise,
+  totalOf, trend, trimLeadingEmpty, UNCATEGORISED_ID, withPrevious, yearSeries, yearsOfHistory,
 } from "./insights";
 import { cycleContaining, daysBetween, recentCycles, recentYears, shiftCycle, yearContaining } from "./months";
 import { presetRange, previousRange, type DateRange, type PeriodPreset } from "./periods";
@@ -242,5 +242,65 @@ describe("comparison series", () => {
     expect(meanOfUsed([point("a", 0), point("b", 300), point("c", 500)])).toBe(400);
     expect(meanOfUsed([point("a", 0)])).toBe(0);
     expect(meanOfUsed([])).toBe(0);
+  });
+});
+
+describe("pace, patterns and allowances", () => {
+  const day = (date: string, amount: number, count = amount ? 1 : 0) => ({ date, amount, count });
+  const slice = (categoryId: string, amount: number, share: number) =>
+    ({ categoryId, name: categoryId, icon: "tag", color: "slate", amount, count: 1, share });
+  const category = (id: string, monthlyBudget: number): Category =>
+    ({ id, name: id, icon: "tag", color: "slate", monthlyBudget, sortOrder: 0, createdAt: 0, updatedAt: 0 });
+
+  it("runs the total forward day by day", () => {
+    const series = cumulativeSeries([day("2026-09-01", 100), day("2026-09-02", 0), day("2026-09-03", 50)]);
+    expect(series.map((p) => p.total)).toEqual([100, 100, 150]);
+    expect(cumulativeSeries([])).toEqual([]);
+  });
+
+  it("ends the running total on the period's total", () => {
+    const days = [day("2026-09-01", 10.1), day("2026-09-02", 20.2), day("2026-09-03", 0.7)];
+    const series = cumulativeSeries(days);
+    expect(series[series.length - 1].total).toBeCloseTo(sum(days.map((d) => d.amount)), 2);
+  });
+
+  it("buckets by weekday and averages over how often that day came round", () => {
+    // 2026-09-07 is a Monday.
+    const week = byWeekday([day("2026-09-07", 100), day("2026-09-14", 300), day("2026-09-08", 50)]);
+    expect(week[0]).toMatchObject({ label: "Mon", amount: 400, days: 2, average: 200 });
+    expect(week[1]).toMatchObject({ label: "Tue", amount: 50, days: 1, average: 50 });
+    expect(week[6]).toMatchObject({ label: "Sun", amount: 0, days: 0, average: 0 });
+  });
+
+  it("splits by how it was paid, dropping the methods never used", () => {
+    const paid = (id: string, amount: number, method: SpendMethod): Expense =>
+      ({ id, date: "2026-09-01", amount, categoryId: "c", note: "", method, createdAt: 0, updatedAt: 0 });
+    const split = byMethod([paid("a", 300, "upi"), paid("b", 100, "cash"), paid("c", 100, "upi")]);
+    expect(split.map((s) => [s.method, s.amount, s.share])).toEqual([["upi", 400, 80], ["cash", 100, 20]]);
+    expect(byMethod([])).toEqual([]);
+  });
+
+  it("measures a category against its own budget when it has one", () => {
+    const [food] = safeToSpend([slice("food", 1200, 60)], [category("food", 2000)], 5000, 10);
+    expect(food).toMatchObject({ left: 800, perDay: 80, ownBudget: true, overspent: false });
+  });
+
+  it("gives a category with no budget its share of what is left", () => {
+    const [food] = safeToSpend([slice("food", 1200, 60)], [category("food", 0)], 5000, 10);
+    expect(food).toMatchObject({ left: 3000, perDay: 300, ownBudget: false });
+  });
+
+  it("says nothing is safe once the month's budget is gone", () => {
+    const [food] = safeToSpend([slice("food", 1200, 60)], [], -500, 10);
+    expect(food).toMatchObject({ left: 0, perDay: 0 });
+  });
+
+  it("reports a category past its own budget as overspent, and offers nothing a day", () => {
+    const [food] = safeToSpend([slice("food", 2500, 60)], [category("food", 2000)], 5000, 10);
+    expect(food).toMatchObject({ left: -500, perDay: 0, overspent: true });
+  });
+
+  it("offers nothing a day once the period is over", () => {
+    expect(safeToSpend([slice("food", 100, 100)], [], 5000, 0)[0].perDay).toBe(0);
   });
 });

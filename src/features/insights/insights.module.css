@@ -244,12 +244,15 @@
 .bars {
   display: flex;
   align-items: flex-end;
+  justify-content: center;
   gap: 3px;
   height: 100%;
 }
 
 .bar {
-  flex: 1;
+  flex: 1 1 0;
+  /* Four months should not read as four slabs. */
+  max-width: 40px;
   display: flex;
   align-items: flex-end;
   min-width: 0;
@@ -300,12 +303,14 @@
 
 .axis {
   display: flex;
+  justify-content: center;
   gap: 3px;
   margin-top: 6px;
 }
 
 .axisLabel {
-  flex: 1;
+  flex: 1 1 0;
+  max-width: 40px;
   min-width: 0;
   font-size: 10px;
   color: var(--ink-3);
@@ -396,3 +401,297 @@
 .heatKey[data-level="2"] { background: var(--heat-2); }
 .heatKey[data-level="3"] { background: var(--heat-3); }
 .heatKey[data-level="4"] { background: var(--heat-4); }
+
+/* Category ring */
+.donut {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0 16px;
+}
+
+.donutRing {
+  width: 168px;
+  height: 168px;
+  transform: rotate(-90deg);
+}
+
+.donutHole {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.donutTotal {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.donutCaption {
+  max-width: 110px;
+  font-size: 11px;
+  color: var(--ink-3);
+}
+
+/* Running total against an even pace */
+.pace {
+  padding: 16px 14px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.paceSvg {
+  display: block;
+  width: 100%;
+  height: 120px;
+  overflow: visible;
+}
+
+.paceArea {
+  fill: var(--primary-tint);
+}
+
+.paceAreaHot {
+  fill: var(--due-bg);
+}
+
+.paceLine {
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.paceLineHot {
+  stroke: var(--due);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.paceGuide {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 5;
+  vector-effect: non-scaling-stroke;
+}
+
+.paceCaption {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+.paceCaption b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Weekday habit */
+.weekday {
+  padding: 16px 14px 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.weekdayBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 92px;
+}
+
+.weekdayCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
+  height: 100%;
+  gap: 6px;
+}
+
+.weekdayBar {
+  width: 100%;
+  height: var(--height);
+  min-height: 2px;
+  border-radius: 6px 6px 3px 3px;
+  background: var(--primary-line);
+}
+
+.weekdayPeak {
+  background: linear-gradient(to top, var(--accent), var(--warn));
+}
+
+.weekdayLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.patternCaption {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.patternCaption b {
+  color: var(--ink);
+}
+
+/* How it was paid */
+.methods {
+  padding: 16px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.methodBar {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.methodPart {
+  height: 100%;
+}
+
+.methodLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.methodLegend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.methodLegend b {
+  margin-left: auto;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.methodLegend small {
+  min-width: 46px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.methodDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* Safe to spend, per category */
+.allowances {
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.allowance {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.allowance:first-child {
+  border-top: 0;
+}
+
+.allowanceIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: var(--row-soft);
+  color: var(--row-ink);
+  font-size: 16px;
+}
+
+.allowanceText {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.allowanceName {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.allowanceOwn {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--row-soft);
+  color: var(--row-ink);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+
+.allowanceSpent {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.allowanceRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: none;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.allowanceRight b {
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.allowanceRight small {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+.allowanceOver {
+  color: var(--due);
+}
+
+/* The caption inside the allowances card needs the card's own padding. */
+.allowances .patternCaption {
+  margin: 0;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--line-soft);
+}

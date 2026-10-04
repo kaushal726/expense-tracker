@@ -4,9 +4,10 @@ import { FiPieChart, FiTarget } from "react-icons/fi";
 import { href, type Route } from "../../app/router";
 import { colorVars } from "../../data/categoryColors";
 import {
-  biggestExpenses, budgetStatus, busiestDays, byCategory, byDay, granularityFor,
-  inRange, meanOfUsed, monthSeries, summarise, totalOf, trend, trimLeadingEmpty,
-  UNCATEGORISED_FILTER, UNCATEGORISED_NAME, withPrevious, yearSeries, yearsOfHistory,
+  biggestExpenses, budgetStatus, busiestDays, byCategory, byDay, byMethod, byWeekday,
+  cumulativeSeries, granularityFor, inRange, meanOfUsed, monthSeries, safeToSpend, summarise,
+  totalOf, trend, trimLeadingEmpty, UNCATEGORISED_FILTER, UNCATEGORISED_NAME, withPrevious,
+  yearSeries, yearsOfHistory,
 } from "../../data/insights";
 import { cycleContaining, cycleLabel, daysBetween, shiftCycle } from "../../data/months";
 import { isSingleCycle, PERIOD_PRESETS, PREVIOUS_LABELS, previousRange } from "../../data/periods";
@@ -20,8 +21,12 @@ import { ListGroup, ListRow, PageHeader, SectionTitle } from "../../ui/layout";
 import { PeriodChips } from "../period/PeriodChips";
 import { usePeriodFilter } from "../period/usePeriodFilter";
 import { BudgetCard } from "./BudgetCard";
+import { DonutChart } from "./DonutChart";
 import { HeatMap } from "./HeatMap";
+import { PaceChart } from "./PaceChart";
+import { MethodSplit, WeekdayChart } from "./PatternCharts";
 import { PeriodSummaryCard } from "./PeriodSummaryCard";
+import { SafeToSpend } from "./SafeToSpend";
 import { TrendChart } from "./TrendChart";
 import styles from "./insights.module.css";
 
@@ -126,6 +131,15 @@ export function InsightsScreen({ route }: { route: Route }) {
 
   const categoryNames = new Map(db.categories.map((c) => [c.id, c.name]));
   const top = biggestExpenses(expenses, TOP_LIST_LIMIT);
+  const budget = monthlyBudget > 0 ? budgetStatus(summary.total, monthlyBudget, summary.daysTotal, summary.daysElapsed) : null;
+  const allowances = budget ? safeToSpend(slices, db.categories, budget.left, summary.daysLeft) : [];
+  /* Only up to today: a flat line across the days still to come would read as "I stopped
+   * spending", and the even pace has to be compared at the same point. */
+  const pace = cumulativeSeries(days.filter((d) => d.date <= today));
+  const weekdays = byWeekday(days);
+  const methods = byMethod(expenses);
+  /* One filled bar beside three empty ones is not a comparison; the note says so instead. */
+  const monthsWithData = months.filter((m) => m.amount > 0).length;
 
   return (
     <>
@@ -143,12 +157,8 @@ export function InsightsScreen({ route }: { route: Route }) {
       {singleCycle && (
         <>
           <SectionTitle>Budget</SectionTitle>
-          {monthlyBudget > 0 ? (
-            <BudgetCard
-              status={budgetStatus(summary.total, monthlyBudget, summary.daysTotal, summary.daysElapsed)}
-              daysLeft={summary.daysLeft}
-              lastMonthPerDay={lastMonthPerDay}
-            />
+          {budget ? (
+            <BudgetCard status={budget} daysLeft={summary.daysLeft} lastMonthPerDay={lastMonthPerDay} />
           ) : (
             <EmptyState
               icon={<FiTarget />}
@@ -163,6 +173,13 @@ export function InsightsScreen({ route }: { route: Route }) {
       <SectionTitle>{TREND_TITLES[granularity]}</SectionTitle>
       <TrendChart points={points} average={summary.dailyAverage && granularity === "day" ? summary.dailyAverage : 0} label={TREND_TITLES[granularity]} emptyText="Nothing spent in this period." />
 
+      {singleCycle && pace.length > 1 && (
+        <>
+          <SectionTitle>Running total</SectionTitle>
+          <PaceChart points={pace} budget={monthlyBudget} daysTotal={summary.daysTotal} />
+        </>
+      )}
+
       {singleCycle && (
         <>
           <SectionTitle>Every day of the month</SectionTitle>
@@ -170,8 +187,34 @@ export function InsightsScreen({ route }: { route: Route }) {
         </>
       )}
 
+      {expenses.length > 0 && (
+        <>
+          <SectionTitle>Which day of the week</SectionTitle>
+          <WeekdayChart points={weekdays} />
+
+          <SectionTitle>How it was paid</SectionTitle>
+          <MethodSplit slices={methods} />
+        </>
+      )}
+
       <SectionTitle right={<span className={styles.sectionTotal}>{formatMoney(summary.total)}</span>}>By category</SectionTitle>
-      {categoryBars.length ? <BarList items={categoryBars} /> : <p className={styles.note}>Nothing spent in this period.</p>}
+      {categoryBars.length ? (
+        <>
+          <DonutChart slices={slices} total={summary.total} caption={summaryLabel} />
+          <BarList items={categoryBars} />
+        </>
+      ) : (
+        <p className={styles.note}>Nothing spent in this period.</p>
+      )}
+
+      {budget && summary.daysLeft > 0 && allowances.length > 0 && (
+        <>
+          <SectionTitle right={<span className={styles.sectionTotal}>{formatMoney(budget.perDayLeft)} a day</span>}>
+            Safe to spend from here
+          </SectionTitle>
+          <SafeToSpend allowances={allowances} daysLeft={summary.daysLeft} anyOwnBudget={allowances.some((a) => a.ownBudget)} />
+        </>
+      )}
 
       {top.length > 0 && (
         <>
@@ -205,10 +248,19 @@ export function InsightsScreen({ route }: { route: Route }) {
         </>
       )}
 
-      <SectionTitle right={<span className={styles.sectionTotal}>{formatMoney(meanOfUsed(months))} a month</span>}>
-        {months.length === COMPARISON_MONTHS ? "Last 12 months" : "Month by month"}
-      </SectionTitle>
-      <TrendChart points={months} average={meanOfUsed(months)} label="Month by month" emptyText="Not enough history yet." />
+      {monthsWithData > 1 ? (
+        <>
+          <SectionTitle right={<span className={styles.sectionTotal}>{formatMoney(meanOfUsed(months))} a month</span>}>
+            {months.length === COMPARISON_MONTHS ? "Last 12 months" : "Month by month"}
+          </SectionTitle>
+          <TrendChart points={months} average={meanOfUsed(months)} label="Month by month" emptyText="Not enough history yet." />
+        </>
+      ) : (
+        <>
+          <SectionTitle>Month by month</SectionTitle>
+          <p className={styles.note}>This is your first month — the comparison fills in from next month.</p>
+        </>
+      )}
 
       {historyYears > 1 && (
         <>
