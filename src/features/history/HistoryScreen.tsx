@@ -10,6 +10,7 @@ import { inRange, summarise, totalOf, UNCATEGORISED_FILTER, UNCATEGORISED_NAME }
 import { methodLabel } from "../../data/methods";
 import { PERIOD_PRESETS } from "../../data/periods";
 import { settingsOf } from "../../data/settings";
+import { dayCostOf, isSpread } from "../../data/spread";
 import { useDB } from "../../data/store";
 import type { Category, Expense } from "../../data/types";
 import { formatDayLabel, isWithin, todayISO } from "../../lib/dates";
@@ -59,6 +60,11 @@ export function HistoryScreen({ route }: { route: Route }) {
 
   const groups = useMemo(() => groupByDay(filtered), [filtered]);
   const total = totalOf(filtered);
+  /* History is the ledger: every row is what left the pocket, in full, on the day it
+   * went. Only the bars take the other view — how much of a day counts against this
+   * month — because that is what the limit above them is measured in. */
+  const dayCosts = useMemo(() => new Map(groups.map((g) => [g.date, dayCostOf(g.expenses, g.date)])), [groups]);
+  const anySpread = useMemo(() => filtered.some(isSpread), [filtered]);
   const summary = useMemo(() => summarise(filtered, period.range, today), [filtered, period.range, today]);
   const allowance = useMemo(() => dailyAllowanceOf(db, today), [db, today]);
   /* With a budget running, every day is measured against what a day currently allows, so
@@ -66,7 +72,7 @@ export function HistoryScreen({ route }: { route: Route }) {
    * the yardstick and the bars only show the shape of the period. */
   const showsToday = isWithin(today, period.range.from, period.range.to);
   const againstLimit = allowance.limit > 0 && showsToday;
-  const barBasis = againstLimit ? allowance.limit : Math.max(1, ...groups.map((g) => g.total));
+  const barBasis = againstLimit ? allowance.limit : Math.max(1, ...dayCosts.values());
 
   const categoryOptions: Option[] = useMemo(() => {
     const orphans = inPeriod.filter((e) => !categoriesById.has(e.categoryId)).length;
@@ -91,7 +97,7 @@ export function HistoryScreen({ route }: { route: Route }) {
         <StatGrid
           columns={3}
           stats={[
-            { label: "Spent", value: formatMoneyShort(total), tone: "primary" },
+            { label: anySpread ? "Paid" : "Spent", value: formatMoneyShort(total), tone: "primary" },
             { label: "Entries", value: String(filtered.length), tone: "neutral" },
             { label: "A day", value: formatMoneyShort(summary.dailyAverage), tone: "accent" },
           ]}
@@ -122,7 +128,9 @@ export function HistoryScreen({ route }: { route: Route }) {
 
       {groups.length ? (
         <div className={styles.groups}>
-          {groups.map((group) => (
+          {groups.map((group) => {
+            const cost = dayCosts.get(group.date) ?? group.total;
+            return (
             <section key={group.date}>
               <header className={styles.dayHeader}>
                 <div className={styles.dayTop}>
@@ -131,12 +139,13 @@ export function HistoryScreen({ route }: { route: Route }) {
                 </div>
                 <div
                   className={styles.dayBar}
-                  data-level={heatLevel(Math.min(group.total, barBasis), barBasis)}
-                  style={{ "--share": `${Math.min(100, (group.total / barBasis) * 100)}%` } as CSSProperties}
+                  data-level={heatLevel(Math.min(cost, barBasis), barBasis)}
+                  style={{ "--share": `${Math.min(100, (cost / barBasis) * 100)}%` } as CSSProperties}
                   aria-hidden
                 />
                 <div className={styles.dayMeta}>
                   <span>{plural(group.expenses.length, "expense")}</span>
+                  {cost !== group.total && <span>{formatMoney(cost)} counts this month</span>}
                   <span>{formatMoney(group.runningTotal)} to date</span>
                 </div>
               </header>
@@ -152,7 +161,8 @@ export function HistoryScreen({ route }: { route: Route }) {
                 ))}
               </div>
             </section>
-          ))}
+            );
+          })}
           <p className={styles.footNote}>{plural(filtered.length, "expense")} · press and hold one to repeat it on today</p>
         </div>
       ) : (

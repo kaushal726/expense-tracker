@@ -7,6 +7,7 @@ import { DEFAULT_CATEGORY_ICON } from "./categoryIcons";
 import { DEFAULT_METHOD } from "./methods";
 import { DEFAULT_CURRENCY } from "./seed";
 import { clampMonthStartDay } from "./settings";
+import { clampSpreadMonths } from "./spread";
 import { APP_SETTINGS_ID, type AppSettings, type Category, type DB, type Expense, type SpendMethod } from "./types";
 
 const APP_ID = "spendly";
@@ -45,6 +46,7 @@ function toExpense(raw: Loose): Expense | null {
     categoryId: str(raw.categoryId),
     note: str(raw.note),
     method: METHODS.includes(method) ? method : DEFAULT_METHOD,
+    spreadMonths: clampSpreadMonths(num(raw.spreadMonths)),
     createdAt: num(raw.createdAt),
     updatedAt: num(raw.updatedAt),
   };

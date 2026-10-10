@@ -3,6 +3,7 @@ import { colorVars } from "../../data/categoryColors";
 import { categoryIcon } from "../../data/categoryIcons";
 import { UNCATEGORISED_NAME } from "../../data/insights";
 import { methodLabel } from "../../data/methods";
+import { isSpread, perCycleCostOf, spreadMonthsOf } from "../../data/spread";
 import type { Category, Expense } from "../../data/types";
 import { formatTime, toISODate } from "../../lib/dates";
 import { formatMoney } from "../../lib/format";
@@ -29,6 +30,9 @@ export function ExpenseRow({ expense, category, onOpen, onRepeat }: ExpenseRowPr
   const note = expense.note.trim();
   const Icon = categoryIcon(category?.icon ?? "tag");
   const { ink, soft } = colorVars(category?.color ?? "slate");
+  /* A payment that covers several months shows what left the pocket, with what it costs a
+   * month under it — the figure every total on the other screens is built from. */
+  const spread = isSpread(expense);
   /* The note is the specific thing, so it leads; the category only repeats itself
    * underneath when the note has already taken the headline. */
   const detail = [note && name, methodLabel(expense.method), timeOf(expense)].filter(Boolean);
@@ -50,7 +54,14 @@ export function ExpenseRow({ expense, category, onOpen, onRepeat }: ExpenseRowPr
           ))}
         </span>
       </span>
-      <span className={styles.rowAmount}>{formatMoney(expense.amount)}</span>
+      <span className={styles.rowAmount}>
+        {formatMoney(expense.amount)}
+        {spread && (
+          <small className={styles.rowPerCycle}>
+            {formatMoney(perCycleCostOf(expense))} × {spreadMonthsOf(expense)}
+          </small>
+        )}
+      </span>
     </button>
   );
 }

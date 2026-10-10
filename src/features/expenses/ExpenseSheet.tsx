@@ -3,6 +3,8 @@ import { FiTrash2 } from "react-icons/fi";
 import { deleteExpense, saveExpense } from "../../data/actions";
 import { SPEND_METHODS } from "../../data/methods";
 import { categoriesInOrder } from "../../data/categoryOrder";
+import { settingsOf } from "../../data/settings";
+import { spreadMonthsOf } from "../../data/spread";
 import { useDB } from "../../data/store";
 import { todayISO } from "../../lib/dates";
 import { parseAmount, round2 } from "../../lib/format";
@@ -17,6 +19,7 @@ import { Sheet } from "../../ui/Sheet";
 import { useToast } from "../../ui/Toast";
 import { QUICK_STEPS } from "../add/quickSteps";
 import { CategoryChips } from "../categories/CategoryChips";
+import { SpreadField } from "./SpreadField";
 import styles from "./expenses.module.css";
 
 interface ExpenseSheetProps {
@@ -41,12 +44,13 @@ function ExpenseForm({ expense, onClose }: { expense: Expense; onClose: () => vo
   const [date, setDate] = useState(expense.date);
   const [method, setMethod] = useState<SpendMethod>(expense.method);
   const [note, setNote] = useState(expense.note);
+  const [spreadMonths, setSpreadMonths] = useState(spreadMonthsOf(expense));
   const [error, setError] = useState("");
 
   const submit = () => {
     const value = parseAmount(amount);
     if (value <= 0) return setError("Enter how much you spent");
-    saveExpense({ date, amount: value, categoryId, note: note.trim(), method }, expense.id);
+    saveExpense({ date, amount: value, categoryId, note: note.trim(), method, spreadMonths }, expense.id);
     toast("Expense updated");
     onClose();
   };
@@ -94,6 +98,13 @@ function ExpenseForm({ expense, onClose }: { expense: Expense; onClose: () => vo
       <Segmented label="Paid by" options={SPEND_METHODS} value={method} onChange={setMethod} className={styles.formGap} />
 
       <TextAreaField label="Note" value={note} onChange={setNote} optional placeholder="What was it for?" />
+
+      <div className={styles.formGap} />
+      <SpreadField
+        value={{ date, amount: parseAmount(amount), spreadMonths }}
+        monthStartDay={settingsOf(db).monthStartDay}
+        onChange={setSpreadMonths}
+      />
     </Sheet>
   );
 }

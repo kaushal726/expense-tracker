@@ -15,6 +15,7 @@ import {
 } from "./months";
 import type { DateRange } from "./periods";
 import { SPEND_METHODS } from "./methods";
+import { costsIn } from "./spread";
 import type { Category, Expense, SpendMethod } from "./types";
 
 export const UNCATEGORISED_ID = "";
@@ -28,6 +29,13 @@ export function totalOf(expenses: Expense[]): number {
 
 export function inRange(expenses: Expense[], range: DateRange): Expense[] {
   return expenses.filter((e) => isWithin(e.date, range.from, range.to));
+}
+
+/** How many payments these amounts came from. A payment spread over months arrives once
+ *  per cycle it covers, and counting those as separate expenses would overstate every
+ *  "entries" figure on screen, so they are counted by id. */
+export function countOf(expenses: Expense[]): number {
+  return new Set(expenses.map((e) => e.id)).size;
 }
 
 /* ---------- headline numbers ---------- */
@@ -50,7 +58,7 @@ export function summarise(expenses: Expense[], range: DateRange, today: string):
   const daysElapsed = elapsedDays(range, today, daysTotal);
   return {
     total,
-    count: expenses.length,
+    count: countOf(expenses),
     daysTotal,
     daysElapsed,
     daysLeft: Math.max(0, daysTotal - daysElapsed),
@@ -88,12 +96,12 @@ export interface CategorySlice {
 
 export function byCategory(expenses: Expense[], categories: Category[]): CategorySlice[] {
   const known = new Map(categories.map((c) => [c.id, c]));
-  const buckets = new Map<string, { amount: number; count: number }>();
+  const buckets = new Map<string, { amount: number; ids: Set<string> }>();
   expenses.forEach((e) => {
     const key = known.has(e.categoryId) ? e.categoryId : UNCATEGORISED_ID;
-    const bucket = buckets.get(key) ?? { amount: 0, count: 0 };
+    const bucket = buckets.get(key) ?? { amount: 0, ids: new Set<string>() };
     bucket.amount += Number(e.amount) || 0;
-    bucket.count += 1;
+    bucket.ids.add(e.id);
     buckets.set(key, bucket);
   });
 
@@ -107,7 +115,7 @@ export function byCategory(expenses: Expense[], categories: Category[]): Categor
         icon: category?.icon ?? DEFAULT_CATEGORY_ICON,
         color: category?.color ?? DEFAULT_CATEGORY_COLOR,
         amount: round2(bucket.amount),
-        count: bucket.count,
+        count: bucket.ids.size,
         share: total ? round2((bucket.amount / total) * 100) : 0,
       };
     })
@@ -182,9 +190,11 @@ export interface CumulativePoint {
   total: number;
 }
 
-/** The running total day by day — what a budget is actually raced against. */
-export function cumulativeSeries(points: DayPoint[]): CumulativePoint[] {
-  let running = 0;
+/** The running total day by day — what a budget is actually raced against. `opening` is
+ *  what the period owed before any of it was spent: cost carried in from a payment made
+ *  earlier, which the month starts out already down by. */
+export function cumulativeSeries(points: DayPoint[], opening = 0): CumulativePoint[] {
+  let running = round2(opening);
   return points.map((point) => {
     running = round2(running + point.amount);
     return { date: point.date, total: running };
@@ -235,7 +245,7 @@ export function byMethod(expenses: Expense[]): MethodSlice[] {
     .map(({ value, label }) => {
       const mine = expenses.filter((e) => e.method === value);
       const amount = totalOf(mine);
-      return { method: value, label, amount, count: mine.length, share: total ? round2((amount / total) * 100) : 0 };
+      return { method: value, label, amount, count: countOf(mine), share: total ? round2((amount / total) * 100) : 0 };
     })
     .filter((slice) => slice.count > 0)
     .sort((a, b) => b.amount - a.amount);
@@ -318,7 +328,7 @@ export function trend(expenses: Expense[], range: DateRange, granularity: Granul
   const spans = granularity === "month"
     ? coverSpans(bounds, cycleContaining(bounds.from, monthStartDay), (s) => shiftCycle(s, monthStartDay, 1))
     : coverSpans(bounds, yearContaining(bounds.from, monthStartDay), (s) => shiftYear(s, monthStartDay, 1));
-  return spans.map((span) => toTrendPoint(expenses, span, granularity === "month" ? cycleShortLabel(span) : yearLabel(span, monthStartDay)));
+  return spans.map((span) => toTrendPoint(expenses, span, granularity === "month" ? cycleShortLabel(span) : yearLabel(span, monthStartDay), monthStartDay));
 }
 
 function coverSpans(bounds: DateRange, first: Span, next: (span: Span) => Span): Span[] {
@@ -327,14 +337,18 @@ function coverSpans(bounds: DateRange, first: Span, next: (span: Span) => Span):
   return spans;
 }
 
-function toTrendPoint(expenses: Expense[], span: Span, label: string): TrendPoint {
-  const within = inRange(expenses, span);
-  return { key: span.key, label, from: span.from, to: span.to, amount: totalOf(within), count: within.length };
+/* Each bucket is charged what it costs, not what was paid inside it: a six-month recharge
+ * shows up as a sixth in each of six bars rather than a spike in one. Expenses already
+ * reduced to one window's cost pass through costsIn() as a plain filter, so a series
+ * built from raw records and one built from a period's costs both come out right. */
+function toTrendPoint(expenses: Expense[], span: Span, label: string, monthStartDay: number): TrendPoint {
+  const within = costsIn(expenses, span, monthStartDay);
+  return { key: span.key, label, from: span.from, to: span.to, amount: totalOf(within), count: countOf(within) };
 }
 
 /** The last `count` monthly cycles, whatever period is on screen. */
 export function monthSeries(expenses: Expense[], today: string, monthStartDay: number, count: number): TrendPoint[] {
-  return recentCycles(today, monthStartDay, count).map((span) => toTrendPoint(expenses, span, cycleShortLabel(span)));
+  return recentCycles(today, monthStartDay, count).map((span) => toTrendPoint(expenses, span, cycleShortLabel(span), monthStartDay));
 }
 
 /** Drops the empty run at the front of a series: a first month of use should not open on
@@ -353,7 +367,7 @@ export function meanOfUsed(points: TrendPoint[]): number {
 
 /** The last `count` years, whatever period is on screen. */
 export function yearSeries(expenses: Expense[], today: string, monthStartDay: number, count: number): TrendPoint[] {
-  return recentYears(today, monthStartDay, count).map((span) => toTrendPoint(expenses, span, yearLabel(span, monthStartDay)));
+  return recentYears(today, monthStartDay, count).map((span) => toTrendPoint(expenses, span, yearLabel(span, monthStartDay), monthStartDay));
 }
 
 /** How many whole years the records already cover — how far back a comparison can go. */

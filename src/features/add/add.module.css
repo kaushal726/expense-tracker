@@ -270,6 +270,14 @@
   color: var(--ink-3);
 }
 
+/* Shown only when a payment made today covers months beyond this one. */
+.todayBudgetSpread {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
 .todayBudgetFoot {
   display: flex;
   align-items: center;

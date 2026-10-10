@@ -13,6 +13,7 @@ import {
 import { cycleContaining, cycleLabel, daysBetween, shiftCycle } from "../../data/months";
 import { isSingleCycle, PERIOD_PRESETS, PREVIOUS_LABELS, previousRange } from "../../data/periods";
 import { settingsOf } from "../../data/settings";
+import { carriedInto, committedAhead, costsIn, dayCostsIn } from "../../data/spread";
 import { useDB } from "../../data/store";
 import { formatDate, todayISO } from "../../lib/dates";
 import { formatMoney, formatMoneyShort, formatShare, plural, round2 } from "../../lib/format";
@@ -46,16 +47,26 @@ export function InsightsScreen({ route }: { route: Route }) {
   const { monthStartDay, monthlyBudget } = settings;
   const period = usePeriodFilter(route, monthStartDay, PERIOD_PRESETS);
 
-  const expenses = useMemo(() => inRange(db.expenses, period.range), [db.expenses, period.range]);
+  /* Everything that totals, groups or compares runs on what the period *costs*: a payment
+   * that covers six months is charged a sixth here and the rest to the months it bought.
+   * The biggest-payments list below is the one view that stays on the payments themselves. */
+  const expenses = useMemo(() => costsIn(db.expenses, period.range, monthStartDay), [db.expenses, period.range, monthStartDay]);
+  const paid = useMemo(() => inRange(db.expenses, period.range), [db.expenses, period.range]);
   const summary = useMemo(() => summarise(expenses, period.range, today), [expenses, period.range, today]);
   const slices = useMemo(() => byCategory(expenses, db.categories), [expenses, db.categories]);
   const granularity = useMemo(() => granularityFor(expenses, period.range), [expenses, period.range]);
-  const points = useMemo(() => trend(expenses, period.range, granularity, monthStartDay), [expenses, period.range, granularity, monthStartDay]);
-  const days = useMemo(() => byDay(expenses, period.range), [expenses, period.range]);
+  /* Day-level views drop the cost carried in from earlier payments, because it belongs to
+   * no day — the calendar and the day chart would otherwise mark a day nothing happened
+   * on. The carried figure is named under the total instead, and opens the pace chart. */
+  const days = useMemo(() => byDay(dayCostsIn(paid, period.range), period.range), [paid, period.range]);
+  const points = useMemo(
+    () => trend(granularity === "day" ? dayCostsIn(paid, period.range) : expenses, period.range, granularity, monthStartDay),
+    [paid, expenses, period.range, granularity, monthStartDay],
+  );
 
   const before = useMemo(() => {
     const range = previousRange(period.range, period.preset, today, monthStartDay);
-    return range ? inRange(db.expenses, range) : null;
+    return range ? costsIn(db.expenses, range, monthStartDay) : null;
   }, [db.expenses, period.range, period.preset, today, monthStartDay]);
   const previous = before ? totalOf(before) : null;
   /* With nothing behind this period, "+₹3,349" on every row would just repeat the amount. */
@@ -67,7 +78,7 @@ export function InsightsScreen({ route }: { route: Route }) {
 
   const lastMonthPerDay = useMemo(() => {
     const previousCycle = shiftCycle(cycleContaining(today, monthStartDay), monthStartDay, -1);
-    const spent = totalOf(inRange(db.expenses, previousCycle));
+    const spent = totalOf(costsIn(db.expenses, previousCycle, monthStartDay));
     return spent ? round2(spent / daysBetween(previousCycle.from, previousCycle.to)) : 0;
   }, [db.expenses, today, monthStartDay]);
 
@@ -80,6 +91,13 @@ export function InsightsScreen({ route }: { route: Route }) {
     () => yearSeries(db.expenses, today, monthStartDay, Math.min(MAX_COMPARISON_YEARS, historyYears)),
     [db.expenses, today, monthStartDay, historyYears],
   );
+
+  const carried = carriedInto(db.expenses, period.range, monthStartDay);
+  const ahead = committedAhead(db.expenses, period.range, monthStartDay);
+  const spreadNotes = [
+    carried > 0 && `includes ${formatMoney(carried)} from payments made earlier`,
+    ahead > 0 && `${formatMoney(ahead)} paid here covers later months`,
+  ].filter(Boolean);
 
   const singleCycle = isSingleCycle(period.range, monthStartDay);
   /* A whole month gets its name; anything else is described by its two ends. */
@@ -132,7 +150,7 @@ export function InsightsScreen({ route }: { route: Route }) {
 
   const categoryNames = new Map(db.categories.map((c) => [c.id, c.name]));
   const categoryColours = new Map(db.categories.map((c) => [c.id, c.color]));
-  const top = biggestExpenses(expenses, TOP_LIST_LIMIT);
+  const top = biggestExpenses(paid, TOP_LIST_LIMIT);
 
   /** Both top-fives link to the day they happened on, which is where the detail is. */
   const dayHref = (date: string) => href("history", { period: "custom", from: date, to: date });
@@ -160,7 +178,7 @@ export function InsightsScreen({ route }: { route: Route }) {
   const allowances = budget ? safeToSpend(slices, db.categories, budget.left, summary.daysLeft) : [];
   /* Only up to today: a flat line across the days still to come would read as "I stopped
    * spending", and the even pace has to be compared at the same point. */
-  const pace = cumulativeSeries(days.filter((d) => d.date <= today));
+  const pace = cumulativeSeries(days.filter((d) => d.date <= today), carried);
   const weekdays = byWeekday(days);
   const methods = byMethod(expenses);
   /* One filled bar beside three empty ones is not a comparison; the note says so instead. */
@@ -176,6 +194,7 @@ export function InsightsScreen({ route }: { route: Route }) {
         summary={summary}
         previous={previous}
         previousLabel={PREVIOUS_LABELS[period.preset] ?? "the period before"}
+        note={spreadNotes.length ? `Spread over months: ${spreadNotes.join(" · ")}.` : undefined}
         facts={facts}
       />
 

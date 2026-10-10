@@ -10,13 +10,17 @@ import styles from "./add.module.css";
 
 interface TodayBudgetProps {
   allowance: DailyAllowance;
+  /** What actually left the pocket today. Differs from the allowance's figure when a
+   *  payment made today covers several months, and the card then says why. */
+  paidToday: number;
   monthSpent: number;
   /** Insights, where the month's own picture is. */
   href: string;
 }
 
-export function TodayBudget({ allowance, monthSpent, href }: TodayBudgetProps) {
+export function TodayBudget({ allowance, paidToday, monthSpent, href }: TodayBudgetProps) {
   const noBudget = allowance.budget === 0;
+  const spreadToday = paidToday !== allowance.spent;
 
   return (
     <a className={styles.todayBudget} href={href}>
@@ -44,6 +48,12 @@ export function TodayBudget({ allowance, monthSpent, href }: TodayBudgetProps) {
               : <b>{formatMoney(allowance.left)} left today</b>}
           </span>
         </>
+      )}
+
+      {spreadToday && (
+        <span className={styles.todayBudgetSpread}>
+          {formatMoney(paidToday)} paid today · {formatMoney(allowance.spent)} of it is this month&apos;s
+        </span>
       )}
 
       <span className={styles.todayBudgetFoot}>

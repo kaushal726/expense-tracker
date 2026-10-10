@@ -5,7 +5,7 @@ import { APP_SETTINGS_ID, type DB } from "./types";
 
 function sample(): DB {
   return {
-    expenses: [{ id: "e1", date: "2026-09-20", amount: 120.5, categoryId: "c1", note: "Chai", method: "upi", createdAt: 1, updatedAt: 2 }],
+    expenses: [{ id: "e1", date: "2026-09-20", amount: 120.5, categoryId: "c1", note: "Chai", method: "upi", spreadMonths: 1, createdAt: 1, updatedAt: 2 }],
     categories: [{ id: "c1", name: "Food", icon: "coffee", color: "amber", monthlyBudget: 3000, sortOrder: 2, createdAt: 1, updatedAt: 2 }],
     settings: [{ id: APP_SETTINGS_ID, monthlyBudget: 20000, monthStartDay: 5, currency: "₹", seededAt: 1, updatedAt: 2 }],
   };

@@ -22,6 +22,9 @@ Adding an expense has to be nearly effortless, or it doesn't get done:
   ones you reach for stay in front. Adding one is a tap and a name.
 - A date switcher sits at the top: arrows step a day at a time, and the pill opens the
   phone's date picker, so a forgotten expense from Friday is a tap away.
+- A payment that buys more than one month — a six-month recharge, a yearly subscription —
+  is entered once, on the day it was paid, with **Spread over** set in Details. It then
+  costs a sixth a month instead of wrecking one.
 - Press and hold any entry to repeat it on today. An entry leads with its note — the
   specific thing — and carries its category, how it was paid and the time underneath, so
   a run of entries in one category still reads as separate entries.
@@ -75,6 +78,18 @@ npm run build       # production build in dist/
   three views of the same sum. An expense whose category was deleted is not dropped — it
   lands in an "Uncategorised" slice, so no total ever changes behind your back.
   `src/data/insightsInvariants.test.ts` checks this over hundreds of generated histories.
+- **Cash and cost are different questions, and the app answers both.** A ₹3,000 six-month
+  recharge *left the pocket* once, on one day; it *costs* ₹500 a month for six months.
+  So every list of payments — the expense row, the day list, History's day totals and the
+  biggest payments — shows the full ₹3,000 on the day it went, while everything that
+  totals, groups or compares a period charges it ₹500. One record holds the payment and
+  the split is worked out on the way out, so changing "spread over" — or the month start
+  day — re-attributes every month at once and nothing stored can go stale. With nothing
+  spread the two views are the same list, entry for entry.
+- **Carried cost belongs to a month, not to a day.** A month opened by an earlier payment
+  starts out already down: the summary says so ("includes ₹999 from payments made
+  earlier"), and the running-total chart starts there. The calendar and the day chart
+  leave it out rather than mark a day nothing happened on.
 - **The trend chart zooms itself**: day by day up to ~3 months, month by month up to ~3
   years, year by year beyond that. "Last 12 months" and "Year on year" are always shown,
   whatever period is selected.
@@ -83,7 +98,9 @@ npm run build       # production build in dist/
   Monday tightens Tuesday; an easy week loosens the rest. The limit holds still through
   the day, so spending eats into what is left of it rather than moving the line
   underfoot. It sits under Save on the Add screen and at the top of History, and every
-  day bar in History is drawn against it, so a full bar means that day used up a day.
+  day bar in History is drawn against it, so a full bar means that day used up a day. It
+  counts a day at what that day costs this month, so paying for six months at once takes a
+  sixth of today and leaves the other five months to carry the rest.
 - **Projection** is the current daily rate carried to the end of the period — shown only
   while the period is still running.
 - **Colour carries meaning, not decoration.** One spending scale — green for a light day

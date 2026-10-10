@@ -12,6 +12,11 @@ export interface Expense {
   categoryId: string;
   note: string;
   method: SpendMethod;
+  /** How many spending cycles the amount covers, starting with the one it was paid in.
+   *  1 is an ordinary expense; 6 is a half-year recharge that costs a sixth a month.
+   *  Read it through spreadMonthsOf() (src/data/spread.ts) — records saved before this
+   *  field existed don't carry it. */
+  spreadMonths: number;
   createdAt: number;
   updatedAt: number;
 }

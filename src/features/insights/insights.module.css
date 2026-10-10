@@ -671,3 +671,11 @@
   padding: 12px 14px 14px;
   border-top: 1px solid var(--line-soft);
 }
+
+/* Why a month's total isn't the same as the payments made in it. */
+.summaryNote {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}

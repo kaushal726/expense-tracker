@@ -4,19 +4,26 @@ import { uid } from "../lib/ids";
 import { categoriesInOrder, moveCategory, nextSortOrder, type MoveDirection } from "./categoryOrder";
 import { removeById, upsertById } from "./listOps";
 import { settingsOf } from "./settings";
+import { clampSpreadMonths } from "./spread";
 import { commit } from "./store";
 import { APP_SETTINGS_ID, type AppSettings, type Category, type DB, type Expense } from "./types";
 
 /* ---------- expenses ---------- */
 
-export type ExpenseInput = Pick<Expense, "date" | "amount" | "categoryId" | "note" | "method">;
+export type ExpenseInput = Pick<Expense, "date" | "amount" | "categoryId" | "note" | "method" | "spreadMonths">;
 
 export function saveExpense(input: ExpenseInput, editingId: string | null): string {
   const id = editingId ?? uid();
   commit((db) => {
     const existing = db.expenses.find((e) => e.id === id);
     const now = Date.now();
-    const expense: Expense = { id, ...input, amount: round2(input.amount), createdAt: existing?.createdAt ?? now, updatedAt: now };
+    const expense: Expense = {
+      id, ...input,
+      amount: round2(input.amount),
+      spreadMonths: clampSpreadMonths(input.spreadMonths),
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    };
     return { ...db, expenses: upsertById(db.expenses, expense) };
   });
   return id;

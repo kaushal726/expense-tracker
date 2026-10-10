@@ -37,7 +37,7 @@ describe("today's allowance", () => {
 
 describe("today's allowance from the data", () => {
   const expense = (id: string, date: string, amount: number): Expense =>
-    ({ id, date, amount, categoryId: "c1", note: "", method: "upi", createdAt: 0, updatedAt: 0 });
+    ({ id, date, amount, categoryId: "c1", note: "", method: "upi", spreadMonths: 1, createdAt: 0, updatedAt: 0 });
 
   function db(expenses: Expense[], monthlyBudget = 31000): DB {
     return {

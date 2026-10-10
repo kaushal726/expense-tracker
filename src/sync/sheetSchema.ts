@@ -11,6 +11,7 @@ import { DEFAULT_CATEGORY_COLOR } from "../data/categoryColors";
 import { DEFAULT_CATEGORY_ICON } from "../data/categoryIcons";
 import { DEFAULT_METHOD } from "../data/methods";
 import { DEFAULT_CURRENCY, DEFAULT_MONTH_START_DAY } from "../data/seed";
+import { NO_SPREAD } from "../data/spread";
 import type { AnyRecord, Collection, Expense } from "../data/types";
 
 export type SheetValue = string | number | boolean;
@@ -40,7 +41,7 @@ function readableTime(ms: number): string {
 const SPECS: Record<Collection, CollectionSpec> = {
   expenses: {
     leading: ["date"],
-    blank: { date: "", amount: 0, categoryId: "", note: "", method: DEFAULT_METHOD, createdAt: 0, updatedAt: 0 },
+    blank: { date: "", amount: 0, categoryId: "", note: "", method: DEFAULT_METHOD, spreadMonths: NO_SPREAD, createdAt: 0, updatedAt: 0 },
     display: (r, ctx) => ({ category: ctx.categoryName((r as Expense).categoryId) }),
   },
   categories: {

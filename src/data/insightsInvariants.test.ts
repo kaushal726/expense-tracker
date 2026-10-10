@@ -7,10 +7,11 @@ import { describe, expect, it } from "vitest";
 import { addDays } from "../lib/dates";
 import { round2 } from "../lib/format";
 import {
-  biggestExpenses, budgetStatus, busiestDays, byCategory, byDay, changeVs, granularityFor,
+  biggestExpenses, budgetStatus, busiestDays, byCategory, byDay, changeVs, countOf, granularityFor,
   byMethod, byWeekday, cumulativeSeries, inRange, meanOfUsed, monthSeries, safeToSpend, summarise,
   totalOf, trend, trimLeadingEmpty, UNCATEGORISED_ID, withPrevious, yearSeries, yearsOfHistory,
 } from "./insights";
+import { carriedInto, costsIn, dayCostsIn, sharesOf } from "./spread";
 import { cycleContaining, daysBetween, recentCycles, recentYears, shiftCycle, yearContaining } from "./months";
 import { presetRange, previousRange, type DateRange, type PeriodPreset } from "./periods";
 import type { Category, Expense, SpendMethod } from "./types";
@@ -55,6 +56,8 @@ function history(seed: number): History {
     categoryId: pick(categoryIds),
     note: "",
     method: pick(METHODS),
+    // Mostly ordinary expenses, with the occasional recharge or yearly subscription.
+    spreadMonths: pick([1, 1, 1, 1, 1, 3, 6, 12]),
     createdAt: i,
     updatedAt: i,
   }));
@@ -65,17 +68,21 @@ function history(seed: number): History {
 const sum = (values: number[]) => round2(values.reduce((s, v) => s + v, 0));
 
 function checkPeriod({ expenses, categories, monthStartDay }: History, range: DateRange): void {
-  const within = inRange(expenses, range);
+  /* What the period costs, which is what every screen hands these functions: a payment
+   * spread over months arrives as one share per cycle it covers. */
+  const within = costsIn(expenses, range, monthStartDay);
   const summary = summarise(within, range, TODAY);
   const total = totalOf(within);
 
   expect(summary.total).toBeCloseTo(total, 2);
-  expect(summary.count).toBe(within.length);
+  // A payment counts once however many cycles it reaches into.
+  expect(summary.count).toBe(countOf(within));
+  expect(summary.count).toBeLessThanOrEqual(within.length);
 
   // Nothing is invented and nothing is dropped: every view sums back to the same figure.
   const slices = byCategory(within, categories);
   expect(sum(slices.map((s) => s.amount))).toBeCloseTo(total, 2);
-  expect(slices.reduce((n, s) => n + s.count, 0)).toBe(within.length);
+  expect(slices.reduce((n, s) => n + s.count, 0)).toBe(countOf(within));
   if (total > 0) expect(sum(slices.map((s) => s.share))).toBeCloseTo(100, 1);
   // Expenses whose category is gone land in one slice rather than vanishing.
   const orphans = within.filter((e) => !categories.some((c) => c.id === e.categoryId));
@@ -98,8 +105,14 @@ function checkPeriod({ expenses, categories, monthStartDay }: History, range: Da
   (["day", "month", "year"] as const).forEach((granularity) => {
     const points = trend(within, range, granularity, monthStartDay);
     expect(sum(points.map((p) => p.amount))).toBeCloseTo(total, 2);
-    expect(points.reduce((n, p) => n + p.count, 0)).toBe(within.length);
-    points.forEach((p, i) => { if (i) expect(p.from).toBe(addDays(points[i - 1].to, 1)); });
+    points.forEach((p, i) => {
+      if (i) expect(p.from).toBe(addDays(points[i - 1].to, 1));
+      // Each bucket holds exactly what falls inside it. A year-wide bucket can hold
+      // several cycles of one spread payment, and counts it as the one payment it is.
+      const inBucket = within.filter((e) => e.date >= p.from && e.date <= p.to);
+      expect(p.amount).toBeCloseTo(totalOf(inBucket), 2);
+      expect(p.count).toBe(countOf(inBucket));
+    });
   });
   expect(["day", "month", "year"]).toContain(granularityFor(within, range));
 
@@ -160,16 +173,17 @@ describe("insights invariants", () => {
     expect(months.map((m) => m.from)).toEqual(cycles.map((c) => c.from));
     months.forEach((m, i) => { if (i) expect(m.from).toBe(addDays(months[i - 1].to, 1)); });
     // The twelve months add up to exactly what was spent in the window they cover.
-    expect(sum(months.map((m) => m.amount))).toBeCloseTo(totalOf(inRange(expenses, { from: months[0].from, to: months[11].to })), 2);
+    const window = { from: months[0].from, to: months[11].to };
+    expect(sum(months.map((m) => m.amount))).toBeCloseTo(totalOf(costsIn(expenses, window, monthStartDay)), 2);
 
     const years = yearSeries(expenses, TODAY, monthStartDay, 3);
     expect(years.map((y) => y.from)).toEqual(recentYears(TODAY, monthStartDay, 3).map((y) => y.from));
-    expect(sum(years.map((y) => y.amount))).toBeCloseTo(totalOf(inRange(expenses, { from: years[0].from, to: years[2].to })), 2);
+    expect(sum(years.map((y) => y.amount))).toBeCloseTo(totalOf(costsIn(expenses, { from: years[0].from, to: years[2].to }, monthStartDay)), 2);
 
     // A year is the twelve cycles inside it, no more and no less.
     const year = yearContaining(TODAY, monthStartDay);
     const inYear = recentCycles(year.to, monthStartDay, 12);
-    expect(sum(inYear.map((c) => totalOf(inRange(expenses, c))))).toBeCloseTo(totalOf(inRange(expenses, year)), 2);
+    expect(sum(inYear.map((c) => totalOf(costsIn(expenses, c, monthStartDay))))).toBeCloseTo(totalOf(costsIn(expenses, year, monthStartDay)), 2);
 
     const covered = yearsOfHistory(expenses, TODAY, monthStartDay);
     expect(covered).toBeGreaterThanOrEqual(expenses.length ? 1 : 0);
@@ -179,14 +193,46 @@ describe("insights invariants", () => {
     }
   });
 
+  it.each(seeds)("charge every payment exactly once, however it is spread, for history %i", (seed) => {
+    const { expenses, monthStartDay } = history(seed);
+
+    // Over all of time, what a period costs and what was paid are the same money.
+    expect(totalOf(costsIn(expenses, { from: "", to: "" }, monthStartDay))).toBeCloseTo(totalOf(expenses), 2);
+
+    // And with nothing spread, the cost view *is* the ledger — entry for entry, so an app
+    // that never reaches for this behaves exactly as it did before.
+    const plain = expenses.map((e) => ({ ...e, spreadMonths: 1 }));
+    PRESETS.forEach((preset) => {
+      const range = presetRange(preset, TODAY, monthStartDay);
+      expect(costsIn(plain, range, monthStartDay)).toEqual(inRange(plain, range));
+    });
+
+    // A cycle costs what its own days saw, plus what earlier payments carried into it —
+    // the split the summary card states in words and the pace chart opens from.
+    const thisCycle = cycleContaining(TODAY, monthStartDay);
+    expect(round2(totalOf(dayCostsIn(expenses, thisCycle)) + carriedInto(expenses, thisCycle, monthStartDay)))
+      .toBeCloseTo(totalOf(costsIn(expenses, thisCycle, monthStartDay)), 2);
+
+    if (!expenses.length) return;
+    // And the cycles the payments reach tile that money: no cycle charged twice, none missed.
+    const dates = expenses.map((e) => e.date).sort();
+    const reach = expenses.map((e) => sharesOf(e, monthStartDay).at(-1)!.cycle.to).sort();
+    const last = reach[reach.length - 1];
+    let charged = 0;
+    for (let cycle = cycleContaining(dates[0], monthStartDay); cycle.from <= last; cycle = shiftCycle(cycle, monthStartDay, 1)) {
+      charged = round2(charged + totalOf(costsIn(expenses, cycle, monthStartDay)));
+    }
+    expect(charged).toBeCloseTo(totalOf(expenses), 2);
+  });
+
   it.each(seeds.slice(0, 60))("compare a period against the one before it for history %i", (seed) => {
     const { expenses, monthStartDay } = history(seed);
     const range = presetRange("month", TODAY, monthStartDay);
     const before = previousRange(range, "month", TODAY, monthStartDay);
 
     expect(before).toEqual(shiftCycle(cycleContaining(TODAY, monthStartDay), monthStartDay, -1));
-    const current = totalOf(inRange(expenses, range));
-    const previous = totalOf(inRange(expenses, before!));
+    const current = totalOf(costsIn(expenses, range, monthStartDay));
+    const previous = totalOf(costsIn(expenses, before!, monthStartDay));
     const change = changeVs(current, previous);
     expect(change.amount).toBeCloseTo(current - previous, 2);
     expect(change.percent === null).toBe(previous === 0);
@@ -274,7 +320,7 @@ describe("pace, patterns and allowances", () => {
 
   it("splits by how it was paid, dropping the methods never used", () => {
     const paid = (id: string, amount: number, method: SpendMethod): Expense =>
-      ({ id, date: "2026-09-01", amount, categoryId: "c", note: "", method, createdAt: 0, updatedAt: 0 });
+      ({ id, date: "2026-09-01", amount, categoryId: "c", note: "", method, spreadMonths: 1, createdAt: 0, updatedAt: 0 });
     const split = byMethod([paid("a", 300, "upi"), paid("b", 100, "cash"), paid("c", 100, "upi")]);
     expect(split.map((s) => [s.method, s.amount, s.share])).toEqual([["upi", 400, 80], ["cash", 100, 20]]);
     expect(byMethod([])).toEqual([]);

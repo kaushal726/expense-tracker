@@ -78,10 +78,32 @@
 }
 
 .rowAmount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   flex: none;
+  gap: 1px;
   font-size: 16px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+/* What a payment spread over months costs each month. */
+.rowPerCycle {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.spreadNote {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+
+.spreadNote b {
+  color: var(--ink-1);
 }
 
 /* Edit sheet */

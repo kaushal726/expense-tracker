@@ -10,6 +10,7 @@ import { totalOf } from "../../data/insights";
 import { DEFAULT_METHOD } from "../../data/methods";
 import { cycleContaining } from "../../data/months";
 import { settingsOf } from "../../data/settings";
+import { costsIn, NO_SPREAD } from "../../data/spread";
 import { useDB } from "../../data/store";
 import type { Expense } from "../../data/types";
 import { todayISO } from "../../lib/dates";
@@ -34,8 +35,9 @@ export function AddScreen() {
   const db = useDB();
   const toast = useToast();
   const today = todayISO();
+  const { monthStartDay } = settingsOf(db);
 
-  const freshDetails = (): ExpenseDetails => ({ date: today, method: DEFAULT_METHOD, note: "" });
+  const freshDetails = (): ExpenseDetails => ({ date: today, method: DEFAULT_METHOD, note: "", spreadMonths: NO_SPREAD });
   const [pad, setPad] = useState(EMPTY_PAD);
   const [categoryId, setCategoryId] = useState("");
   const [details, setDetails] = useState<ExpenseDetails>(freshDetails);
@@ -51,10 +53,12 @@ export function AddScreen() {
     () => db.expenses.filter((e) => e.date === details.date).sort((a, b) => b.createdAt - a.createdAt),
     [db.expenses, details.date],
   );
+  /* What the month *costs*, so it matches the budget the limit above it is working from. */
+  const paidToday = useMemo(() => totalOf(db.expenses.filter((e) => e.date === today)), [db.expenses, today]);
   const monthSpent = useMemo(() => {
-    const cycle = cycleContaining(today, settingsOf(db).monthStartDay);
-    return totalOf(db.expenses.filter((e) => e.date >= cycle.from && e.date <= cycle.to));
-  }, [db, today]);
+    const cycle = cycleContaining(today, monthStartDay);
+    return totalOf(costsIn(db.expenses, cycle, monthStartDay));
+  }, [db.expenses, today, monthStartDay]);
 
   const reset = () => {
     setPad(EMPTY_PAD);
@@ -95,11 +99,19 @@ export function AddScreen() {
 
       <NumberPad onPress={press} />
 
-      <DetailsRow method={details.method} note={details.note} onChange={(patch) => setDetails((d) => ({ ...d, ...patch }))} />
+      <DetailsRow
+        date={details.date}
+        method={details.method}
+        note={details.note}
+        spreadMonths={details.spreadMonths}
+        amount={amount}
+        monthStartDay={monthStartDay}
+        onChange={(patch) => setDetails((d) => ({ ...d, ...patch }))}
+      />
       <Button variant="primary" block className={styles.save} onClick={save}>Save expense</Button>
 
       {/* What today allows, read on the way out of every entry. */}
-      <TodayBudget allowance={allowance} monthSpent={monthSpent} href={href("insights")} />
+      <TodayBudget allowance={allowance} paidToday={paidToday} monthSpent={monthSpent} href={href("insights")} />
 
       <DayList
         date={details.date}

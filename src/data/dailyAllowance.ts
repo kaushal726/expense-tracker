@@ -7,6 +7,7 @@
  */
 import { cycleContaining, daysBetween } from "./months";
 import { settingsOf } from "./settings";
+import { cycleCostSplit } from "./spread";
 import { round2 } from "../lib/format";
 import type { DB } from "./types";
 
@@ -41,14 +42,13 @@ export function dailyAllowance(budget: number, spentBeforeToday: number, spentTo
   };
 }
 
-const sum = (amounts: number[]) => round2(amounts.reduce((total, n) => total + (Number(n) || 0), 0));
-
 /** Today's allowance from the live data, for the cycle today falls in. */
 export function dailyAllowanceOf(db: DB, today: string): DailyAllowance {
   const { monthlyBudget, monthStartDay } = settingsOf(db);
   const cycle = cycleContaining(today, monthStartDay);
-  const inCycle = db.expenses.filter((e) => e.date >= cycle.from && e.date <= cycle.to);
-  const spentToday = sum(inCycle.filter((e) => e.date === today).map((e) => e.amount));
-  const spentBefore = round2(sum(inCycle.map((e) => e.amount)) - spentToday);
-  return dailyAllowance(monthlyBudget, spentBefore, spentToday, Math.max(0, daysBetween(today, cycle.to)));
+  /* What the cycle *costs*, not what was paid in it: a six-month recharge takes a sixth of
+   * this month's budget and leaves the other five months to carry the rest, so one big
+   * payment no longer flattens every day that is left. */
+  const { before, today: spentToday } = cycleCostSplit(db.expenses, cycle, today, monthStartDay);
+  return dailyAllowance(monthlyBudget, before, spentToday, Math.max(0, daysBetween(today, cycle.to)));
 }
