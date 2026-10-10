@@ -1,22 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { formatMoney, formatMoneyShort, formatPercentChange, formatShare, parseAmount, plural, round2 } from "./format";
+import { formatMoney, formatPercentChange, formatShare, parseAmount, plural, round2 } from "./format";
 
 describe("money", () => {
-  it("groups the Indian way and keeps up to two paise digits", () => {
+  it("groups the Indian way and never shows paise", () => {
     expect(formatMoney(1234567)).toBe("₹12,34,567");
-    expect(formatMoney(1234.5)).toBe("₹1,234.5");
-    expect(formatMoney(0.005)).toBe("₹0.01");
+    expect(formatMoney(1234.5)).toBe("₹1,235");
+    expect(formatMoney(333.27)).toBe("₹333");
+    expect(formatMoney(0.6)).toBe("₹1");
+    expect(formatMoney(0.005)).toBe("₹0");
     expect(formatMoney(0)).toBe("₹0");
   });
 
   it("puts the minus before the rupee sign", () => {
     expect(formatMoney(-300)).toBe("−₹300");
-    expect(formatMoneyShort(-1250.6)).toBe("−₹1,251");
-  });
-
-  it("drops the paise from headline figures", () => {
-    expect(formatMoneyShort(1234.5)).toBe("₹1,235");
-    expect(formatMoneyShort(0)).toBe("₹0");
+    expect(formatMoney(-1250.6)).toBe("−₹1,251");
   });
 
   it("rounds to paise, and treats junk as zero", () => {
@@ -36,13 +33,13 @@ describe("money", () => {
 
 describe("percentages", () => {
   it("always shows which way a change went", () => {
-    expect(formatPercentChange(12.34)).toBe("+12.3%");
+    expect(formatPercentChange(12.34)).toBe("+12%");
     expect(formatPercentChange(-8)).toBe("−8%");
     expect(formatPercentChange(0)).toBe("0%");
   });
 
   it("writes a share without a sign", () => {
-    expect(formatShare(33.333)).toBe("33.3%");
+    expect(formatShare(33.333)).toBe("33%");
     expect(formatShare(100)).toBe("100%");
   });
 });

@@ -90,6 +90,10 @@ npm run build       # production build in dist/
   starts out already down: the summary says so ("includes ₹999 from payments made
   earlier"), and the running-total chart starts there. The calendar and the day chart
   leave it out rather than mark a day nothing happened on.
+- **Nothing on screen carries paise.** Every figure is a whole rupee, and so is every
+  percentage — a daily limit reads "₹333", not "₹333.27". The maths underneath still
+  counts in paise, so the totals, shares and splits all reconcile exactly; the rounding
+  happens once, on the way to the screen, in `src/lib/format.ts`.
 - **The trend chart zooms itself**: day by day up to ~3 months, month by month up to ~3
   years, year by year beyond that. "Last 12 months" and "Year on year" are always shown,
   whatever period is selected.

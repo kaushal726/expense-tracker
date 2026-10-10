@@ -14,7 +14,7 @@ import { dayCostOf, isSpread } from "../../data/spread";
 import { useDB } from "../../data/store";
 import type { Category, Expense } from "../../data/types";
 import { formatDayLabel, isWithin, todayISO } from "../../lib/dates";
-import { formatMoney, formatMoneyShort, plural } from "../../lib/format";
+import { formatMoney, plural } from "../../lib/format";
 import { EmptyState } from "../../ui/feedback";
 import type { CSSProperties } from "react";
 import { FilterBar } from "../../ui/FilterBar";
@@ -97,9 +97,9 @@ export function HistoryScreen({ route }: { route: Route }) {
         <StatGrid
           columns={3}
           stats={[
-            { label: anySpread ? "Paid" : "Spent", value: formatMoneyShort(total), tone: "primary" },
+            { label: anySpread ? "Paid" : "Spent", value: formatMoney(total), tone: "primary" },
             { label: "Entries", value: String(filtered.length), tone: "neutral" },
-            { label: "A day", value: formatMoneyShort(summary.dailyAverage), tone: "accent" },
+            { label: "A day", value: formatMoney(summary.dailyAverage), tone: "accent" },
           ]}
         />
       </div>

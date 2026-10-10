@@ -16,7 +16,7 @@ import { settingsOf } from "../../data/settings";
 import { carriedInto, committedAhead, costsIn, dayCostsIn } from "../../data/spread";
 import { useDB } from "../../data/store";
 import { formatDate, todayISO } from "../../lib/dates";
-import { formatMoney, formatMoneyShort, formatShare, plural, round2 } from "../../lib/format";
+import { formatMoney, formatShare, plural, round2 } from "../../lib/format";
 import { BarList, type BarItem } from "../../ui/BarList";
 import { EmptyState } from "../../ui/feedback";
 import { PageHeader, SectionTitle } from "../../ui/layout";
@@ -116,10 +116,10 @@ export function InsightsScreen({ route }: { route: Route }) {
   const busiest = busiestDays(days, TOP_LIST_LIMIT);
   const peakDay = busiest[0];
   const facts = [
-    { label: "A day", value: formatMoneyShort(summary.dailyAverage) },
+    { label: "A day", value: formatMoney(summary.dailyAverage) },
     running && summary.daysLeft > 0
-      ? { label: "On track for", value: formatMoneyShort(summary.projected) }
-      : { label: "Busiest day", value: formatMoneyShort(peakDay?.amount ?? 0) },
+      ? { label: "On track for", value: formatMoney(summary.projected) }
+      : { label: "Busiest day", value: formatMoney(peakDay?.amount ?? 0) },
     running && summary.daysLeft > 0
       ? { label: "Days left", value: String(summary.daysLeft) }
       : { label: "Over", value: plural(summary.daysTotal, "day") },
