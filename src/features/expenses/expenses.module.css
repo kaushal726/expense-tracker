@@ -95,6 +95,15 @@
   color: var(--ink-3);
 }
 
+.spreadChoices {
+  margin-bottom: 14px;
+}
+
+/* A count, not a sentence: three digits is all it ever needs. */
+.spreadCount {
+  max-width: 116px;
+}
+
 .spreadNote {
   margin: 8px 0 0;
   font-size: 13px;
