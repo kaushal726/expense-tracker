@@ -190,11 +190,9 @@ export interface CumulativePoint {
   total: number;
 }
 
-/** The running total day by day — what a budget is actually raced against. `opening` is
- *  what the period owed before any of it was spent: cost carried in from a payment made
- *  earlier, which the month starts out already down by. */
-export function cumulativeSeries(points: DayPoint[], opening = 0): CumulativePoint[] {
-  let running = round2(opening);
+/** The running total day by day — what a budget is actually raced against. */
+export function cumulativeSeries(points: DayPoint[]): CumulativePoint[] {
+  let running = 0;
   return points.map((point) => {
     running = round2(running + point.amount);
     return { date: point.date, total: running };

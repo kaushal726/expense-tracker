@@ -309,6 +309,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.dayPaid {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
 .todayList {
   display: flex;
   flex-direction: column;

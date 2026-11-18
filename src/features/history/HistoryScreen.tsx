@@ -6,15 +6,15 @@ import { duplicateExpense, deleteExpense } from "../../data/actions";
 import { dailyAllowanceOf } from "../../data/dailyAllowance";
 import { groupByDay } from "../../data/grouping";
 import { heatLevel } from "../../data/heatLevel";
-import { inRange, summarise, totalOf, UNCATEGORISED_FILTER, UNCATEGORISED_NAME } from "../../data/insights";
+import { summarise, UNCATEGORISED_FILTER, UNCATEGORISED_NAME } from "../../data/insights";
 import { methodLabel } from "../../data/methods";
 import { PERIOD_PRESETS } from "../../data/periods";
 import { settingsOf } from "../../data/settings";
-import { dayCostOf, isSpread } from "../../data/spread";
+import { ledgerIn, type CostEntry } from "../../data/spread";
 import { useDB } from "../../data/store";
 import type { Category, Expense } from "../../data/types";
 import { formatDayLabel, isWithin, todayISO } from "../../lib/dates";
-import { formatMoney, plural } from "../../lib/format";
+import { formatMoney, plural, round2 } from "../../lib/format";
 import { EmptyState } from "../../ui/feedback";
 import type { CSSProperties } from "react";
 import { FilterBar } from "../../ui/FilterBar";
@@ -29,7 +29,7 @@ import styles from "./history.module.css";
 
 const ALL_CATEGORIES = "all";
 
-function matches(expense: Expense, category: Category | undefined, query: string): boolean {
+function matches({ expense }: CostEntry, category: Category | undefined, query: string): boolean {
   if (!query) return true;
   return [expense.note, category?.name ?? UNCATEGORISED_NAME, methodLabel(expense.method), String(expense.amount)]
     .some((field) => field.toLowerCase().includes(query));
@@ -47,38 +47,43 @@ export function HistoryScreen({ route }: { route: Route }) {
   const search = route.query.get("q") ?? "";
   const categoriesById = useMemo(() => new Map(db.categories.map((c) => [c.id, c])), [db.categories]);
 
-  const inPeriod = useMemo(() => inRange(db.expenses, period.range), [db.expenses, period.range]);
+  /* Every entry the period holds: each payment on the day it was made, and the later
+   * months of a spread one on the same day of those months. */
+  const inPeriod = useMemo(
+    () => ledgerIn(db.expenses, period.range, settings.monthStartDay),
+    [db.expenses, period.range, settings.monthStartDay],
+  );
   const inCategory = useMemo(() => {
     if (categoryId === ALL_CATEGORIES) return inPeriod;
-    if (categoryId === UNCATEGORISED_FILTER) return inPeriod.filter((e) => !categoriesById.has(e.categoryId));
-    return inPeriod.filter((e) => e.categoryId === categoryId);
+    if (categoryId === UNCATEGORISED_FILTER) return inPeriod.filter((e) => !categoriesById.has(e.expense.categoryId));
+    return inPeriod.filter((e) => e.expense.categoryId === categoryId);
   }, [inPeriod, categoryId, categoriesById]);
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return query ? inCategory.filter((e) => matches(e, categoriesById.get(e.categoryId), query)) : inCategory;
+    return query ? inCategory.filter((e) => matches(e, categoriesById.get(e.expense.categoryId), query)) : inCategory;
   }, [inCategory, search, categoriesById]);
 
   const groups = useMemo(() => groupByDay(filtered), [filtered]);
-  const total = totalOf(filtered);
-  /* History is the ledger: every row is what left the pocket, in full, on the day it
-   * went. Only the bars take the other view — how much of a day counts against this
-   * month — because that is what the limit above them is measured in. */
-  const dayCosts = useMemo(() => new Map(groups.map((g) => [g.date, dayCostOf(g.expenses, g.date)])), [groups]);
-  const anySpread = useMemo(() => filtered.some(isSpread), [filtered]);
-  const summary = useMemo(() => summarise(filtered, period.range, today), [filtered, period.range, today]);
+  /* Totals and bars are what the days *cost*, so they agree with the month on Insights and
+   * the limit above them. A payment's own row still shows what left the pocket. */
+  const total = useMemo(() => round2(filtered.reduce((sum, e) => sum + e.cost, 0)), [filtered]);
+  const summary = useMemo(
+    () => summarise(filtered.map(({ expense, date, cost }) => ({ ...expense, date, amount: cost })), period.range, today),
+    [filtered, period.range, today],
+  );
   const allowance = useMemo(() => dailyAllowanceOf(db, today), [db, today]);
   /* With a budget running, every day is measured against what a day currently allows, so
    * a full bar means "that day used up a day". Without one, the biggest day on screen is
    * the yardstick and the bars only show the shape of the period. */
   const showsToday = isWithin(today, period.range.from, period.range.to);
   const againstLimit = allowance.limit > 0 && showsToday;
-  const barBasis = againstLimit ? allowance.limit : Math.max(1, ...dayCosts.values());
+  const barBasis = againstLimit ? allowance.limit : Math.max(1, ...groups.map((g) => g.total));
 
   const categoryOptions: Option[] = useMemo(() => {
-    const orphans = inPeriod.filter((e) => !categoriesById.has(e.categoryId)).length;
+    const orphans = inPeriod.filter((e) => !categoriesById.has(e.expense.categoryId)).length;
     return [
       { value: ALL_CATEGORIES, label: "All categories", count: inPeriod.length },
-      ...db.categories.map((c) => ({ value: c.id, label: c.name, count: inPeriod.filter((e) => e.categoryId === c.id).length })),
+      ...db.categories.map((c) => ({ value: c.id, label: c.name, count: inPeriod.filter((e) => e.expense.categoryId === c.id).length })),
       ...(orphans ? [{ value: UNCATEGORISED_FILTER, label: UNCATEGORISED_NAME, count: orphans }] : []),
     ];
   }, [db.categories, inPeriod, categoriesById]);
@@ -97,7 +102,7 @@ export function HistoryScreen({ route }: { route: Route }) {
         <StatGrid
           columns={3}
           stats={[
-            { label: anySpread ? "Paid" : "Spent", value: formatMoney(total), tone: "primary" },
+            { label: "Spent", value: formatMoney(total), tone: "primary" },
             { label: "Entries", value: String(filtered.length), tone: "neutral" },
             { label: "A day", value: formatMoney(summary.dailyAverage), tone: "accent" },
           ]}
@@ -128,9 +133,7 @@ export function HistoryScreen({ route }: { route: Route }) {
 
       {groups.length ? (
         <div className={styles.groups}>
-          {groups.map((group) => {
-            const cost = dayCosts.get(group.date) ?? group.total;
-            return (
+          {groups.map((group) => (
             <section key={group.date}>
               <header className={styles.dayHeader}>
                 <div className={styles.dayTop}>
@@ -139,30 +142,30 @@ export function HistoryScreen({ route }: { route: Route }) {
                 </div>
                 <div
                   className={styles.dayBar}
-                  data-level={heatLevel(Math.min(cost, barBasis), barBasis)}
-                  style={{ "--share": `${Math.min(100, (cost / barBasis) * 100)}%` } as CSSProperties}
+                  data-level={heatLevel(Math.min(group.total, barBasis), barBasis)}
+                  style={{ "--share": `${Math.min(100, (group.total / barBasis) * 100)}%` } as CSSProperties}
                   aria-hidden
                 />
                 <div className={styles.dayMeta}>
-                  <span>{plural(group.expenses.length, "expense")}</span>
-                  {cost !== group.total && <span>{formatMoney(cost)} counts this month</span>}
+                  <span>{plural(group.entries.length, "expense")}</span>
+                  {group.paid !== group.total && <span>{formatMoney(group.paid)} paid</span>}
                   <span>{formatMoney(group.runningTotal)} to date</span>
                 </div>
               </header>
               <div className={styles.dayList}>
-                {group.expenses.map((expense) => (
+                {group.entries.map((entry) => (
                   <ExpenseRow
-                    key={expense.id}
-                    expense={expense}
-                    category={categoriesById.get(expense.categoryId)}
-                    onOpen={() => setEditing(expense)}
-                    onRepeat={() => repeat(expense)}
+                    key={`${entry.expense.id}-${entry.index}`}
+                    expense={entry.expense}
+                    category={categoriesById.get(entry.expense.categoryId)}
+                    onOpen={() => setEditing(entry.expense)}
+                    onRepeat={entry.index === 1 ? () => repeat(entry.expense) : undefined}
+                    instalment={entry.index > 1 ? entry : undefined}
                   />
                 ))}
               </div>
             </section>
-            );
-          })}
+          ))}
           <p className={styles.footNote}>{plural(filtered.length, "expense")} · press and hold one to repeat it on today</p>
         </div>
       ) : (

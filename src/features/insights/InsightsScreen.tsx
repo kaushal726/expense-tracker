@@ -13,7 +13,7 @@ import {
 import { cycleContaining, cycleLabel, daysBetween, shiftCycle } from "../../data/months";
 import { isSingleCycle, PERIOD_PRESETS, PREVIOUS_LABELS, previousRange } from "../../data/periods";
 import { settingsOf } from "../../data/settings";
-import { carriedInto, committedAhead, costsIn, dayCostsIn } from "../../data/spread";
+import { carriedInto, committedAhead, costsIn } from "../../data/spread";
 import { useDB } from "../../data/store";
 import { formatDate, todayISO } from "../../lib/dates";
 import { formatMoney, formatShare, plural, round2 } from "../../lib/format";
@@ -55,13 +55,12 @@ export function InsightsScreen({ route }: { route: Route }) {
   const summary = useMemo(() => summarise(expenses, period.range, today), [expenses, period.range, today]);
   const slices = useMemo(() => byCategory(expenses, db.categories), [expenses, db.categories]);
   const granularity = useMemo(() => granularityFor(expenses, period.range), [expenses, period.range]);
-  /* Day-level views drop the cost carried in from earlier payments, because it belongs to
-   * no day — the calendar and the day chart would otherwise mark a day nothing happened
-   * on. The carried figure is named under the total instead, and opens the pace chart. */
-  const days = useMemo(() => byDay(dayCostsIn(paid, period.range), period.range), [paid, period.range]);
+  /* Each month's share of a spread payment sits on the same day of its month, so the
+   * calendar and the day chart mark it where the History list shows it. */
+  const days = useMemo(() => byDay(expenses, period.range), [expenses, period.range]);
   const points = useMemo(
-    () => trend(granularity === "day" ? dayCostsIn(paid, period.range) : expenses, period.range, granularity, monthStartDay),
-    [paid, expenses, period.range, granularity, monthStartDay],
+    () => trend(expenses, period.range, granularity, monthStartDay),
+    [expenses, period.range, granularity, monthStartDay],
   );
 
   const before = useMemo(() => {
@@ -152,8 +151,9 @@ export function InsightsScreen({ route }: { route: Route }) {
   const categoryColours = new Map(db.categories.map((c) => [c.id, c.color]));
   const top = biggestExpenses(paid, TOP_LIST_LIMIT);
 
-  /** Both top-fives link to the day they happened on, which is where the detail is. */
-  const dayHref = (date: string) => href("history", { period: "custom", from: date, to: date });
+  /** Anything dated on a chart opens the expenses of those days, which is where the detail is. */
+  const rangeHref = (from: string, to: string) => href("history", { period: "custom", from, to });
+  const dayHref = (date: string) => rangeHref(date, date);
 
   const biggestBars: BarItem[] = top.map((expense) => ({
     key: expense.id,
@@ -178,7 +178,7 @@ export function InsightsScreen({ route }: { route: Route }) {
   const allowances = budget ? safeToSpend(slices, db.categories, budget.left, summary.daysLeft) : [];
   /* Only up to today: a flat line across the days still to come would read as "I stopped
    * spending", and the even pace has to be compared at the same point. */
-  const pace = cumulativeSeries(days.filter((d) => d.date <= today), carried);
+  const pace = cumulativeSeries(days.filter((d) => d.date <= today));
   const weekdays = byWeekday(days);
   const methods = byMethod(expenses);
   /* One filled bar beside three empty ones is not a comparison; the note says so instead. */
@@ -215,7 +215,7 @@ export function InsightsScreen({ route }: { route: Route }) {
       )}
 
       <SectionTitle>{TREND_TITLES[granularity]}</SectionTitle>
-      <TrendChart points={points} average={summary.dailyAverage && granularity === "day" ? summary.dailyAverage : 0} label={TREND_TITLES[granularity]} emptyText="Nothing spent in this period." />
+      <TrendChart points={points} average={summary.dailyAverage && granularity === "day" ? summary.dailyAverage : 0} label={TREND_TITLES[granularity]} emptyText="Nothing spent in this period." hrefOf={(point) => rangeHref(point.from, point.to)} />
 
       {singleCycle && pace.length > 1 && (
         <>
@@ -227,7 +227,7 @@ export function InsightsScreen({ route }: { route: Route }) {
       {singleCycle && (
         <>
           <SectionTitle>Every day of the month</SectionTitle>
-          <HeatMap points={days} />
+          <HeatMap points={days} hrefOf={dayHref} />
         </>
       )}
 
@@ -279,7 +279,7 @@ export function InsightsScreen({ route }: { route: Route }) {
           <SectionTitle right={<span className={styles.sectionTotal}>{formatMoney(meanOfUsed(months))} a month</span>}>
             {months.length === COMPARISON_MONTHS ? "Last 12 months" : "Month by month"}
           </SectionTitle>
-          <TrendChart points={months} average={meanOfUsed(months)} label="Month by month" emptyText="Not enough history yet." />
+          <TrendChart points={months} average={meanOfUsed(months)} label="Month by month" emptyText="Not enough history yet." hrefOf={(point) => rangeHref(point.from, point.to)} />
         </>
       ) : (
         <>
@@ -291,7 +291,7 @@ export function InsightsScreen({ route }: { route: Route }) {
       {historyYears > 1 && (
         <>
           <SectionTitle>Year on year</SectionTitle>
-          <TrendChart points={years} average={meanOfUsed(years)} label="Year on year" emptyText="Not enough history yet." />
+          <TrendChart points={years} average={meanOfUsed(years)} label="Year on year" emptyText="Not enough history yet." hrefOf={(point) => rangeHref(point.from, point.to)} />
         </>
       )}
     </>

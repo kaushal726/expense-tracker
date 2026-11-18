@@ -80,16 +80,18 @@ npm run build       # production build in dist/
   `src/data/insightsInvariants.test.ts` checks this over hundreds of generated histories.
 - **Cash and cost are different questions, and the app answers both.** A ₹3,000 six-month
   recharge *left the pocket* once, on one day; it *costs* ₹500 a month for six months.
-  So every list of payments — the expense row, the day list, History's day totals and the
-  biggest payments — shows the full ₹3,000 on the day it went, while everything that
-  totals, groups or compares a period charges it ₹500. One record holds the payment and
-  the split is worked out on the way out, so changing "spread over" — or the month start
-  day — re-attributes every month at once and nothing stored can go stale. With nothing
-  spread the two views are the same list, entry for entry.
-- **Carried cost belongs to a month, not to a day.** A month opened by an earlier payment
-  starts out already down: the summary says so ("includes ₹999 from payments made
-  earlier"), and the running-total chart starts there. The calendar and the day chart
-  leave it out rather than mark a day nothing happened on.
+  The payment's own row shows the full ₹3,000 on the day it went (with "₹500 × 6" under
+  it), and the biggest-payments list does the same, while everything that totals, groups
+  or compares a period charges it ₹500. One record holds the payment and the split is
+  worked out on the way out, so changing "spread over" — or the month start day —
+  re-attributes every month at once and nothing stored can go stale. With nothing spread
+  the two views are the same list, entry for entry.
+- **A spread payment shows up in every month it covers, on the same day.** Paid on the 5th
+  of October for six months, it is a ₹500 entry on the 5th of October, November, December
+  and so on ("2 of 6", "paid 5 Oct") in History and under the date on the Add screen —
+  and on the calendar and day chart. A month too short for the day takes its last one.
+  Day totals, the bars, "Spent" and "to date" in History are what the days *cost*; a day
+  that holds a payment says how much was "paid" when that differs.
 - **Nothing on screen carries paise.** Every figure is a whole rupee, and so is every
   percentage — a daily limit reads "₹333", not "₹333.27". The maths underneath still
   counts in paise, so the totals, shares and splits all reconcile exactly; the rounding

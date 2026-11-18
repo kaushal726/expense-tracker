@@ -13,8 +13,14 @@ function weekdayOffset(iso: string): number {
   return (parseISODate(iso).getDay() + 6) % 7;
 }
 
+interface HeatMapProps {
+  points: DayPoint[];
+  /** Where a day's square leads; the days still to come stay plain. */
+  hrefOf?: (date: string) => string;
+}
+
 /** One square per day: the darker it is, the more went out that day. */
-export function HeatMap({ points }: { points: DayPoint[] }) {
+export function HeatMap({ points, hrefOf }: HeatMapProps) {
   if (!points.length) return null;
   const max = Math.max(...points.map((p) => p.amount));
   const lead = weekdayOffset(points[0].date);
@@ -27,16 +33,17 @@ export function HeatMap({ points }: { points: DayPoint[] }) {
       </div>
       <div className={styles.heatGrid}>
         {Array.from({ length: lead }, (_, i) => <span key={`pad-${i}`} className={styles.heatPad} aria-hidden />)}
-        {points.map((point) => (
-          <span
-            key={point.date}
-            className={cx(styles.heatCell, point.date === today && styles.heatToday)}
-            data-level={heatLevel(point.amount, max)}
-            title={`${formatDate(point.date)} · ${formatMoney(point.amount)}`}
-          >
-            {Number(point.date.slice(8))}
-          </span>
-        ))}
+        {points.map((point) => {
+          const shared = {
+            className: cx(styles.heatCell, point.date === today && styles.heatToday),
+            "data-level": heatLevel(point.amount, max),
+            title: `${formatDate(point.date)} · ${formatMoney(point.amount)}`,
+          };
+          const day = Number(point.date.slice(8));
+          return hrefOf && point.date <= today
+            ? <a key={point.date} {...shared} className={cx(shared.className, styles.heatLink)} href={hrefOf(point.date)}>{day}</a>
+            : <span key={point.date} {...shared}>{day}</span>;
+        })}
       </div>
       <p className={styles.heatLegend}>
         <span>Nothing</span>

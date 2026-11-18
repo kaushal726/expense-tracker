@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest";
 import { round2 } from "../lib/format";
 import { cycleContaining, shiftCycle } from "./months";
 import {
-  carriedInto, clampSpreadMonths, committedAhead, costsIn, cycleCostSplit, dayCostOf,
-  isSpread, MAX_SPREAD_MONTHS, NO_SPREAD, perCycleCostOf, sharesOf, spreadEndsAt,
+  carriedInto, clampSpreadMonths, committedAhead, costsIn, cycleCostSplit, isSpread,
+  ledgerIn, MAX_SPREAD_MONTHS, NO_SPREAD, paidOf, perCycleCostOf, sharesOf, spreadEndsAt,
   spreadMonthsOf,
 } from "./spread";
 import type { Expense } from "./types";
@@ -63,9 +63,28 @@ describe("splitting a payment", () => {
     });
   });
 
-  it("files the first share on the day it was paid and the rest on their own cycles", () => {
+  it("files the first share on the day it was paid and the rest on the same day of the next months", () => {
     const shares = sharesOf(expense({ spreadMonths: 3 }), START);
-    expect(shares.map((s) => s.date)).toEqual(["2026-10-05", "2026-11-01", "2026-12-01"]);
+    expect(shares.map((s) => s.date)).toEqual(["2026-10-05", "2026-11-05", "2026-12-05"]);
+  });
+
+  it("takes a month's last day when the month is too short for the day", () => {
+    const shares = sharesOf(expense({ date: "2026-01-31", spreadMonths: 4 }), START);
+    expect(shares.map((s) => s.date)).toEqual(["2026-01-31", "2026-02-28", "2026-03-31", "2026-04-30"]);
+  });
+
+  it("keeps every share inside its own cycle, whatever the start day and the payment day", () => {
+    for (let startDay = 1; startDay <= 28; startDay += 1) {
+      for (let day = 1; day <= 31; day += 1) {
+        const date = `2026-${day > 30 ? "10" : "11"}-${String(day).padStart(2, "0")}`;
+        const shares = sharesOf(expense({ date, spreadMonths: 14 }), startDay);
+        shares.forEach((share, i) => {
+          expect(share.date >= share.cycle.from && share.date <= share.cycle.to).toBe(true);
+          if (i > 0) expect(share.date > shares[i - 1].date).toBe(true);
+          if (i > 0 && day <= 28) expect(Number(share.date.slice(8))).toBe(day);
+        });
+      }
+    }
   });
 
   it("covers consecutive cycles with no gap and no repeat", () => {
@@ -81,7 +100,8 @@ describe("splitting a payment", () => {
     // Paid 5 October with a cycle that starts on the 15th: that is still September's.
     const shares = sharesOf(expense({ spreadMonths: 2 }), 15);
     expect(shares[0].cycle.from).toBe("2026-09-15");
-    expect(shares[1].date).toBe("2026-10-15");
+    expect(shares[1].cycle.from).toBe("2026-10-15");
+    expect(shares[1].date).toBe("2026-11-05");
   });
 
   it("leaves a one-month expense as a single share of the whole amount", () => {
@@ -101,7 +121,7 @@ describe("what a window costs", () => {
     const december = shiftCycle(october, START, 2);
     const costs = costsIn([recharge], december, START);
     expect(total(costs)).toBe(500);
-    expect(costs[0].date).toBe(december.from);
+    expect(costs[0].date).toBe("2026-12-05");
   });
 
   it("charges nothing once the payment has run out", () => {
@@ -139,19 +159,37 @@ describe("what a window costs", () => {
   });
 });
 
-describe("a day's share of the month", () => {
-  it("counts only what the payment costs this cycle, not what left the pocket", () => {
-    const day = [expense({ spreadMonths: 6 }), expense({ id: "e2", amount: 220, spreadMonths: NO_SPREAD })];
-    expect(dayCostOf(day, "2026-10-05")).toBe(720);
+describe("the ledger a range shows", () => {
+  const october = cycleContaining("2026-10-05", START);
+  const november = shiftCycle(october, START, 1);
+  const recharge = expense({ spreadMonths: 6 });
+
+  it("shows the payment on the day it was made, in full", () => {
+    const [entry] = ledgerIn([recharge], october, START);
+    expect(entry).toMatchObject({ date: "2026-10-05", cost: 500, index: 1, of: 6 });
+    expect(entry.expense).toBe(recharge);
+    expect(paidOf(entry)).toBe(3000);
   });
 
-  it("is the day's total when nothing on it was spread", () => {
-    const day = [expense({ spreadMonths: NO_SPREAD }), expense({ id: "e2", amount: 220 })];
-    expect(dayCostOf(day, "2026-10-05")).toBe(3220);
+  it("shows a later month's share on the same day of that month, at its monthly cost", () => {
+    const [entry] = ledgerIn([recharge], november, START);
+    expect(entry).toMatchObject({ date: "2026-11-05", cost: 500, index: 2, of: 6 });
+    expect(paidOf(entry)).toBe(0);
   });
 
-  it("ignores the other days", () => {
-    expect(dayCostOf([expense()], "2026-10-06")).toBe(0);
+  it("leaves out a share whose day is outside the range", () => {
+    expect(ledgerIn([recharge], { from: "2026-11-06", to: "2026-11-30" }, START)).toEqual([]);
+    expect(ledgerIn([recharge], { from: "2026-11-05", to: "2026-11-05" }, START)).toHaveLength(1);
+  });
+
+  it("is one entry per ordinary expense", () => {
+    expect(ledgerIn([expense(), expense({ id: "e2", date: "2026-11-03" })], october, START)).toHaveLength(1);
+  });
+
+  it("adds up to what costsIn says the range costs", () => {
+    const window = { from: october.from, to: shiftCycle(october, START, 5).to };
+    const cost = (list: { cost: number }[]) => sum(list.map((e) => e.cost));
+    expect(cost(ledgerIn([recharge], window, START))).toBe(total(costsIn([recharge], window, START)));
   });
 });
 

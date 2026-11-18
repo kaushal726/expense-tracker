@@ -11,6 +11,8 @@ interface TrendChartProps {
   average?: number;
   label: string;
   emptyText: string;
+  /** Where a selected bar's period can be opened — the expenses behind it. */
+  hrefOf?: (point: TrendPoint) => string;
 }
 
 /** Roughly this many labels fit under the bars on a phone. */
@@ -24,7 +26,7 @@ function captionOf(point: TrendPoint): string {
   return `${formatDate(point.from, { day: "numeric", month: "short" })} – ${formatDate(point.to, { day: "numeric", month: "short", year: "numeric" })}`;
 }
 
-export function TrendChart({ points, average = 0, label, emptyText }: TrendChartProps) {
+export function TrendChart({ points, average = 0, label, emptyText, hrefOf }: TrendChartProps) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   if (!points.length) return <p className={styles.note}>{emptyText}</p>;
 
@@ -64,7 +66,12 @@ export function TrendChart({ points, average = 0, label, emptyText }: TrendChart
       </div>
       <p className={styles.caption}>
         {selected
-          ? <><b>{formatMoney(selected.amount)}</b> · {captionOf(selected)}</>
+          ? (
+            <>
+              <b>{formatMoney(selected.amount)}</b> · {captionOf(selected)}
+              {hrefOf && <> · <a className={styles.captionLink} href={hrefOf(selected)}>See expenses</a></>}
+            </>
+          )
           : <>Highest: <b>{formatMoney(peak.amount)}</b> · {captionOf(peak)}</>}
       </p>
     </div>

@@ -7,14 +7,15 @@
  *
  * Every screen reads one of two views on purpose:
  *   - cash, the record itself: what left the pocket, in full, on the day it went. The
- *     expense row, the day list, the biggest payments, History's day totals.
- *   - cost, through costsIn(): the share belonging to the window being looked at. Every
- *     total, category split, trend, budget and daily limit.
+ *     amount on a payment's own row and the biggest-payments list.
+ *   - cost, through costsIn() and ledgerIn(): the share belonging to the window being
+ *     looked at, filed on a real day — the day it was paid, then the same day of every
+ *     month after. Every total, day list, category split, trend, budget and daily limit.
  *
  * With nothing spread the two views are identical, down to the object references, so an
  * app that never uses this behaves exactly as it did before.
  */
-import { isWithin } from "../lib/dates";
+import { isWithin, parseISODate, toISODate } from "../lib/dates";
 import { round2 } from "../lib/format";
 import { cycleContaining, shiftCycle, type Span } from "./months";
 import type { DateRange } from "./periods";
@@ -49,14 +50,29 @@ export interface SpreadShare {
   /** The cycle this share belongs to. */
   cycle: Span;
   /** The day the share is filed under: the day it was paid for the cycle it was paid in,
-   *  and the first day of the cycle for the ones carried forward, which have no day of
-   *  their own. */
+   *  and the same day of the month in every cycle after it. */
   date: string;
   amount: number;
   /** 1 for the cycle it was paid in, counting up from there. */
   index: number;
   /** How many cycles in all — 1 for an ordinary expense. */
   of: number;
+}
+
+/** The day a later share falls on: the same day of the month the payment was made, so a
+ *  bill paid on the 5th shows up on the 5th of every month it covers. A month too short for
+ *  the day gets its last one, and the date never leaves the cycle — each cycle holds exactly
+ *  one share, whatever the month start day is. */
+function sameDayIn(cycle: Span, dayOfMonth: number): string {
+  const start = parseISODate(cycle.from);
+  const inMonth = (offset: number) => {
+    const month = new Date(start.getFullYear(), start.getMonth() + offset, 1);
+    const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    return toISODate(new Date(month.getFullYear(), month.getMonth(), Math.min(dayOfMonth, lastDay)));
+  };
+  const thisMonth = inMonth(0);
+  const date = thisMonth >= cycle.from ? thisMonth : inMonth(1);
+  return date > cycle.to ? cycle.to : date;
 }
 
 /** The amount split across the cycles it covers. The shares always add back up to the
@@ -66,11 +82,12 @@ export function sharesOf(expense: SpreadInput, monthStartDay: number): SpreadSha
   const amount = round2(Number(expense.amount) || 0);
   const even = round2(amount / of);
   const shares: SpreadShare[] = [];
+  const dayOfMonth = parseISODate(expense.date).getDate();
   let cycle = cycleContaining(expense.date, monthStartDay);
   let left = amount;
   for (let index = 1; index <= of; index += 1) {
     const share = index === of ? round2(left) : even;
-    shares.push({ cycle, date: index === 1 ? expense.date : cycle.from, amount: share, index, of });
+    shares.push({ cycle, date: index === 1 ? expense.date : sameDayIn(cycle, dayOfMonth), amount: share, index, of });
     left = round2(left - share);
     cycle = shiftCycle(cycle, monthStartDay, 1);
   }
@@ -117,25 +134,37 @@ export function costsIn(expenses: Expense[], range: DateRange, monthStartDay: nu
   return costs;
 }
 
-/** The same costs, but only the ones a day actually saw money for: each payment on the
- *  day it was made, charged what it costs the month it was made in.
- *
- *  Cost carried in from an earlier payment has no day of its own, so it is left out
- *  rather than parked on the 1st, where it would paint a calendar square and head a
- *  "busiest days" list for a day nothing happened on. carriedInto() accounts for it
- *  instead, and the summary says so in words. */
-export function dayCostsIn(expenses: Expense[], range: DateRange): Expense[] {
-  return expenses
-    .filter((e) => isWithin(e.date, range.from, range.to))
-    .map((e) => (isSpread(e) ? { ...e, amount: perCycleCostOf(e), spreadMonths: NO_SPREAD } : e));
+/** One line of the ledger as a period sees it: a payment, or one month's share of it. */
+export interface CostEntry {
+  /** The payment as it was saved — what the row shows and what tapping it edits. */
+  expense: Expense;
+  /** The day this entry is filed under. */
+  date: string;
+  /** What it costs the cycle it falls in: the whole amount unless the payment is spread. */
+  cost: number;
+  /** 1 for the day it was paid, 2 and up for the same day in the months that follow. */
+  index: number;
+  /** How many cycles the payment covers in all. */
+  of: number;
 }
 
-/** How much of what was paid on a day counts against the cycle that day falls in — the
- *  day's total until something spread was paid that day. */
-export function dayCostOf(expenses: SpreadInput[], date: string): number {
-  const paid = expenses.filter((e) => e.date === date);
-  return round2(paid.reduce((sum, e) => sum + perCycleCostOf(e), 0));
+/** Every entry the range holds, the later months of a spread payment included — so a bill
+ *  paid on the 5th of October is there on the 5th of November, at its monthly cost. With
+ *  nothing spread this is just the expenses in the range, one entry each. */
+export function ledgerIn(expenses: Expense[], range: DateRange, monthStartDay: number): CostEntry[] {
+  const entries: CostEntry[] = [];
+  expenses.forEach((expense) => {
+    sharesOf(expense, monthStartDay).forEach((share) => {
+      if (!isWithin(share.date, range.from, range.to)) return;
+      entries.push({ expense, date: share.date, cost: share.amount, index: share.index, of: share.of });
+    });
+  });
+  return entries;
 }
+
+/** What actually left the pocket on a day for this entry: the whole payment on the day it
+ *  was made, and nothing for the later months, which were paid for up front. */
+export const paidOf = (entry: CostEntry): number => (entry.index === 1 ? Number(entry.expense.amount) || 0 : 0);
 
 export interface CycleCostSplit {
   /** What the cycle already owed before today, cost carried in from earlier payments and

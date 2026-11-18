@@ -307,6 +307,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.captionLink {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
 /* Calendar heat map */
 .heat {
   padding: 16px 14px;
@@ -342,6 +348,20 @@
   font-size: 13px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+}
+
+/* A day's square is a link to that day's expenses, so it needs to look like a square still. */
+.heatLink {
+  text-decoration: none;
+}
+
+.heatLink:active {
+  filter: brightness(0.92);
+}
+
+.heatLink:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 /* Four fixed steps, each with the text colour that stays readable on it. */

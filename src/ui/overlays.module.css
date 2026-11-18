@@ -1,8 +1,10 @@
+/* At the bottom, just above the tab bar: the top of a screen is where its date and
+ * period controls live, and a toast sitting on them is in the way of the next tap. */
 .toastRegion {
   position: fixed;
   left: 0;
   right: 0;
-  top: calc(var(--safe-top) + 12px);
+  bottom: calc(var(--tabbar-height) + var(--safe-bottom) + 10px);
   z-index: 200;
   display: flex;
   justify-content: center;
@@ -15,11 +17,11 @@
   align-items: center;
   gap: 14px;
   max-width: 440px;
-  padding: 12px 16px;
+  padding: 9px 14px;
   border-radius: 12px;
   background: var(--toast-bg);
   color: var(--toast-ink);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
   box-shadow: var(--shadow-float);
   pointer-events: auto;
@@ -49,10 +51,10 @@
 
 @media (min-width: 900px) {
   .toastRegion {
-    top: 24px;
+    bottom: 24px;
   }
 }
 
 @keyframes toastIn {
-  from { opacity: 0; transform: translateY(-8px); }
+  from { opacity: 0; transform: translateY(8px); }
 }

@@ -3,9 +3,9 @@ import { colorVars } from "../../data/categoryColors";
 import { categoryIcon } from "../../data/categoryIcons";
 import { UNCATEGORISED_NAME } from "../../data/insights";
 import { methodLabel } from "../../data/methods";
-import { isSpread, perCycleCostOf, spreadMonthsOf } from "../../data/spread";
+import { isSpread, perCycleCostOf, spreadMonthsOf, type CostEntry } from "../../data/spread";
 import type { Category, Expense } from "../../data/types";
-import { formatTime, toISODate } from "../../lib/dates";
+import { formatDate, formatTime, toISODate } from "../../lib/dates";
 import { formatMoney } from "../../lib/format";
 import { useLongPress } from "./useLongPress";
 import styles from "./expenses.module.css";
@@ -14,9 +14,14 @@ interface ExpenseRowProps {
   expense: Expense;
   category: Category | undefined;
   onOpen: () => void;
-  /** Press and hold to repeat the spend on today's date. */
-  onRepeat: () => void;
+  /** Press and hold to repeat the spend on today's date. Left out for a later month's
+   *  share, which is not a spend of its own to repeat. */
+  onRepeat?: () => void;
+  /** Set when this row is one month's share of an earlier payment, rather than the payment. */
+  instalment?: Pick<CostEntry, "index" | "of" | "cost">;
 }
+
+const NOTHING = () => {};
 
 /* The time an expense was entered is only the time it was spent when the two are the
  * same day — a backdated entry would otherwise claim a time it never had. */
@@ -24,8 +29,8 @@ function timeOf(expense: Expense): string {
   return toISODate(new Date(expense.createdAt)) === expense.date ? formatTime(expense.createdAt) : "";
 }
 
-export function ExpenseRow({ expense, category, onOpen, onRepeat }: ExpenseRowProps) {
-  const longPress = useLongPress(onRepeat);
+export function ExpenseRow({ expense, category, onOpen, onRepeat, instalment }: ExpenseRowProps) {
+  const longPress = useLongPress(onRepeat ?? NOTHING);
   const name = category?.name ?? UNCATEGORISED_NAME;
   const note = expense.note.trim();
   const Icon = categoryIcon(category?.icon ?? "tag");
@@ -35,7 +40,11 @@ export function ExpenseRow({ expense, category, onOpen, onRepeat }: ExpenseRowPr
   const spread = isSpread(expense);
   /* The note is the specific thing, so it leads; the category only repeats itself
    * underneath when the note has already taken the headline. */
-  const detail = [note && name, methodLabel(expense.method), timeOf(expense)].filter(Boolean);
+  const detail = [
+    note && name,
+    methodLabel(expense.method),
+    instalment ? `paid ${formatDate(expense.date, { day: "numeric", month: "short" })}` : timeOf(expense),
+  ].filter(Boolean);
 
   return (
     <button
@@ -55,8 +64,9 @@ export function ExpenseRow({ expense, category, onOpen, onRepeat }: ExpenseRowPr
         </span>
       </span>
       <span className={styles.rowAmount}>
-        {formatMoney(expense.amount)}
-        {spread && (
+        {formatMoney(instalment ? instalment.cost : expense.amount)}
+        {instalment && <small className={styles.rowPerCycle}>{instalment.index} of {instalment.of}</small>}
+        {spread && !instalment && (
           <small className={styles.rowPerCycle}>
             {formatMoney(perCycleCostOf(expense))} × {spreadMonthsOf(expense)}
           </small>

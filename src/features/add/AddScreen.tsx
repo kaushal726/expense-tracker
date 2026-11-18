@@ -10,7 +10,8 @@ import { totalOf } from "../../data/insights";
 import { DEFAULT_METHOD } from "../../data/methods";
 import { cycleContaining } from "../../data/months";
 import { settingsOf } from "../../data/settings";
-import { costsIn, NO_SPREAD } from "../../data/spread";
+import { costsIn, ledgerIn, NO_SPREAD } from "../../data/spread";
+import { groupByDay } from "../../data/grouping";
 import { useDB } from "../../data/store";
 import type { Expense } from "../../data/types";
 import { todayISO } from "../../lib/dates";
@@ -48,10 +49,11 @@ export function AddScreen() {
   const categoriesById = useMemo(() => new Map(db.categories.map((c) => [c.id, c])), [db.categories]);
   const allowance = useMemo(() => dailyAllowanceOf(db, today), [db, today]);
   /* The list follows the date on the switcher, so an expense backdated to Friday is
-   * visible the moment it is saved. */
-  const dayExpenses = useMemo(
-    () => db.expenses.filter((e) => e.date === details.date).sort((a, b) => b.createdAt - a.createdAt),
-    [db.expenses, details.date],
+   * visible the moment it is saved. It holds what that day costs, which includes the share
+   * of an earlier bill that falls on the same day of the month. */
+  const day = useMemo(
+    () => groupByDay(ledgerIn(db.expenses, { from: details.date, to: details.date }, monthStartDay))[0],
+    [db.expenses, details.date, monthStartDay],
   );
   /* What the month *costs*, so it matches the budget the limit above it is working from. */
   const paidToday = useMemo(() => totalOf(db.expenses.filter((e) => e.date === today)), [db.expenses, today]);
@@ -60,9 +62,11 @@ export function AddScreen() {
     return totalOf(costsIn(db.expenses, cycle, monthStartDay));
   }, [db.expenses, today, monthStartDay]);
 
+  /* The day stays where it was: someone catching up on yesterday adds several entries to
+   * it, and snapping back to today after each would put the next one on the wrong day. */
   const reset = () => {
     setPad(EMPTY_PAD);
-    setDetails(freshDetails());
+    setDetails((d) => ({ ...freshDetails(), date: d.date }));
   };
 
   const amount = padValue(pad);
@@ -115,8 +119,9 @@ export function AddScreen() {
 
       <DayList
         date={details.date}
-        expenses={dayExpenses}
-        total={totalOf(dayExpenses)}
+        entries={day?.entries ?? []}
+        total={day?.total ?? 0}
+        paid={day?.paid ?? 0}
         categoriesById={categoriesById}
         onOpen={setEditing}
         onRepeat={repeat}

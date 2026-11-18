@@ -4,14 +4,14 @@
  * boundaries follow the configured start day whatever it is set to.
  */
 import { describe, expect, it } from "vitest";
-import { addDays } from "../lib/dates";
+import { addDays, isWithin } from "../lib/dates";
 import { round2 } from "../lib/format";
 import {
   biggestExpenses, budgetStatus, busiestDays, byCategory, byDay, changeVs, countOf, granularityFor,
   byMethod, byWeekday, cumulativeSeries, inRange, meanOfUsed, monthSeries, safeToSpend, summarise,
   totalOf, trend, trimLeadingEmpty, UNCATEGORISED_ID, withPrevious, yearSeries, yearsOfHistory,
 } from "./insights";
-import { carriedInto, costsIn, dayCostsIn, sharesOf } from "./spread";
+import { costsIn, ledgerIn, sharesOf } from "./spread";
 import { cycleContaining, daysBetween, recentCycles, recentYears, shiftCycle, yearContaining } from "./months";
 import { presetRange, previousRange, type DateRange, type PeriodPreset } from "./periods";
 import type { Category, Expense, SpendMethod } from "./types";
@@ -207,11 +207,14 @@ describe("insights invariants", () => {
       expect(costsIn(plain, range, monthStartDay)).toEqual(inRange(plain, range));
     });
 
-    // A cycle costs what its own days saw, plus what earlier payments carried into it —
-    // the split the summary card states in words and the pace chart opens from.
-    const thisCycle = cycleContaining(TODAY, monthStartDay);
-    expect(round2(totalOf(dayCostsIn(expenses, thisCycle)) + carriedInto(expenses, thisCycle, monthStartDay)))
-      .toBeCloseTo(totalOf(costsIn(expenses, thisCycle, monthStartDay)), 2);
+    // The ledger a screen lists is the same money as the cost it totals, and every line of
+    // it sits on a day inside the range it was asked for.
+    PRESETS.forEach((preset) => {
+      const range = presetRange(preset, TODAY, monthStartDay);
+      const entries = ledgerIn(expenses, range, monthStartDay);
+      expect(sum(entries.map((e) => e.cost))).toBeCloseTo(totalOf(costsIn(expenses, range, monthStartDay)), 2);
+      entries.forEach((e) => expect(isWithin(e.date, range.from, range.to)).toBe(true));
+    });
 
     if (!expenses.length) return;
     // And the cycles the payments reach tile that money: no cycle charged twice, none missed.
