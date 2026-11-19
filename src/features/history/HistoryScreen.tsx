@@ -148,7 +148,7 @@ export function HistoryScreen({ route }: { route: Route }) {
                 />
                 <div className={styles.dayMeta}>
                   <span>{plural(group.entries.length, "expense")}</span>
-                  {group.paid !== group.total && <span>{formatMoney(group.paid)} paid</span>}
+                  {group.paid > 0 && group.paid !== group.total && <span>{formatMoney(group.paid)} paid</span>}
                   <span>{formatMoney(group.runningTotal)} to date</span>
                 </div>
               </header>

@@ -161,6 +161,12 @@
   border-top: 1px solid var(--line);
 }
 
+/* The summary card always holds three facts, so they share one row rather than leave one
+ * alone on a second. */
+.summary .facts {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .facts > div {
   min-width: 0;
 }
